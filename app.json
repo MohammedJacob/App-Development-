@@ -4,12 +4,12 @@
     "slug": "invest",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/Company_logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/Company_logo.png",
+      "resizeMode": "scale-down",
+      "backgroundColor": "#2A3030"
     },
     "ios": {
       "supportsTablet": true
@@ -17,12 +17,12 @@
     "android": {
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/Company_logo.png",
+        "backgroundColor": "#373737"
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/Company_logo.png"
     },
     "plugins": [
       "@react-native-firebase/app"
