@@ -1,80 +1,115 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Linking, Image, TouchableOpacity } from 'react-native';
-import NavBar from './components/NavBar'; // Ensure the path is correct according to your project structure
+import { SafeAreaView, Text, StyleSheet, View, FlatList, Dimensions } from 'react-native';
+import FooterTabs from './components/footer'; // Import FooterTabs component
+import { LineChart } from 'react-native-chart-kit';
 
-const linkedinIcon = 'https://image.similarpng.com/very-thumbnail/2020/07/Linkedin-logo-on-transparent-Background-PNG-.png';
-const instagramIcon = 'https://image.similarpng.com/very-thumbnail/2020/11/Instagram-icon-on-transparent-background-PNG.png';
-const twitterIcon = 'https://static.dezeen.com/uploads/2023/07/x-logo-twitter-elon-musk_dezeen_2364_col_0-1.jpg';
-const companyLogo = require('./assets/Company_logo.png');
+const data = {
+  portfolio: [
+    { id: '1', name: 'Cuberto', amount: '$1,200.87', dividends: '$40 dividends' },
+    { id: '2', name: 'Healthily Ltd.', amount: '$3,467.32', dividends: '$120 dividends' },
+    { id: '3', name: 'Neotroy', amount: '$2,837.41', dividends: '$70 dividends' },
+  ],
+  futureProjections: {
+    amount: '$2.4M',
+    graphData: [2200, 2400, 2600, 2800, 3000, 3200],
+  },
+  upcomingEvents: [
+    { id: '1', event: 'A property in your area is distributing dividends' },
+    { id: '2', event: 'Investment seminar on July 20' },
+  ],
+  propertyListings: [
+    { id: '3', name: 'Chrysler Building', amount: '$1,867 per sqft' },
+    { id: '4', name: 'One Wilshire Building', amount: '$2,987 per sqft' },
+  ],
+};
 
-const AboutUsScreen = ({ navigation }) => {
-  const handleLink = (url) => {
-    Linking.openURL(url);
-  };
+const PortfolioScreen = ({ navigation }) => {
+  const renderSectionHeader = (title) => (
+    <Text style={styles.sectionTitle}>{title}</Text>
+  );
+
+  const renderPortfolioItem = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{item.name}</Text>
+      <Text style={styles.cardAmount}>{item.amount}</Text>
+      <Text style={styles.cardDividends}>{item.dividends}</Text>
+    </View>
+  );
+
+  const renderEventItem = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{item.event}</Text>
+    </View>
+  );
+
+  const renderPropertyItem = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{item.name}</Text>
+      <Text style={styles.cardAmount}>{item.amount}</Text>
+    </View>
+  );
 
   return (
-    <View style={styles.container}>
-      <NavBar navigation={navigation} />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.header}>About Us</Text>
-        <Text style={styles.text}>
-          Welcome to our company. We are dedicated to providing the best services and products to our customers.
-        </Text>
-        <Text style={styles.text}>
-          Our mission is to make the world a better place through our innovative solutions and exceptional customer service.
-        </Text>
-
-        {/* Social Media Links */}
-        <View style={styles.socialContainer}>
-          <TouchableOpacity onPress={() => handleLink('https://www.linkedin.com/company/reneum/posts/?feedView=all')}>
-            <Image source={{ uri: linkedinIcon }} style={styles.socialIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleLink('https://instagram.com/reneum_institute/')}>
-            <Image source={{ uri: instagramIcon }} style={styles.socialIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleLink('https://x.com/reneuminstitute?lang=en')}>
-            <Image source={{ uri: twitterIcon }} style={styles.socialIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => handleLink('https://reneum.com/#our-mission')}>
-            <Image source={companyLogo} style={styles.socialIcon} />
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={[
+          { title: 'Your Portfolio', data: data.portfolio, renderItem: renderPortfolioItem },
+          { title: 'Future Projections', data: [data.futureProjections], renderItem: (props) => (
+            <View style={styles.projectionsCard}>
+              <Text style={styles.projectionsAmount}>{data.futureProjections.amount}</Text>
+              <LineChart
+                data={{
+                  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                  datasets: [{ data: data.futureProjections.graphData }],
+                }}
+                width={Dimensions.get('window').width - 32}
+                height={220}
+                yAxisLabel="$"
+                yAxisSuffix="k"
+                chartConfig={{
+                  backgroundColor: '#e26a00',
+                  backgroundGradientFrom: '#fb8c00',
+                  backgroundGradientTo: '#ffa726',
+                  decimalPlaces: 2,
+                  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                  style: { borderRadius: 16 },
+                  propsForDots: { r: '6', strokeWidth: '2', stroke: '#ffa726' },
+                }}
+                style={{ marginVertical: 8, borderRadius: 16 }}
+              />
+            </View>
+          )},
+          { title: 'Upcoming Events', data: data.upcomingEvents, renderItem: renderEventItem },
+          { title: 'Open Property Listings', data: data.propertyListings, renderItem: renderPropertyItem },
+        ]}
+        keyExtractor={(item, index) => `section-${index}`}  // Use section index as a key
+        renderItem={({ item }) => (
+          <View style={styles.section}>
+            {renderSectionHeader(item.title)}
+            <FlatList
+              data={item.data}
+              renderItem={item.renderItem}
+              keyExtractor={(subItem) => subItem.id}  // Use the unique ID for sub-items
+            />
+          </View>
+        )}
+      />
+      <FooterTabs navigation={navigation} />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF',
-  },
-  contentContainer: {
-    flexGrow: 1,
-    padding: 20,
-  },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  text: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  socialContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between', // Ensures even spacing between items
-    marginTop: 20,
-    marginHorizontal: 10,
-  },
-  socialIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
+  container: { flex: 1 },
+  section: { marginBottom: 20 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  card: { backgroundColor: 'white', padding: 15, borderRadius: 10, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  cardTitle: { fontSize: 16, fontWeight: 'bold' },
+  cardAmount: { fontSize: 14, color: 'green', marginTop: 5 },
+  cardDividends: { fontSize: 12, color: 'grey', marginTop: 2 },
+  projectionsCard: { backgroundColor: 'white', padding: 20, borderRadius: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2, alignItems: 'center' },
+  projectionsAmount: { fontSize: 22, fontWeight: 'bold', color: 'blue' },
 });
 
-export default AboutUsScreen;
+export default PortfolioScreen;

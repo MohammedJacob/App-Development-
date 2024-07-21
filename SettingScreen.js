@@ -1,4 +1,3 @@
-// SettingsScreen.js
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, Switch } from 'react-native';
 
@@ -24,11 +23,11 @@ const SettingsScreen = ({ navigation }) => {
             value={isEnabled}
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.setting} onPress={() => handlePress('AboutUs')}>
+        <TouchableOpacity style={styles.setting} onPress={() => handlePress('About Us')}>
           <Text style={styles.settingText}>About</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.setting} onPress={() => handlePress('PrivacyPolicy')}>
+        <TouchableOpacity style={styles.setting} onPress={() => handlePress('Privacy Policy')}>
           <Text style={styles.settingText}>Privacy</Text>
         </TouchableOpacity>
       </ScrollView>

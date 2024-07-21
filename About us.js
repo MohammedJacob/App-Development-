@@ -61,7 +61,6 @@ const AboutUsScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      <NavBar navigation={navigation} />
     </View>
   );
 };

@@ -1,48 +1,64 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Image, SafeAreaView } from 'react-native';
+import FooterTabs from './components/footer'; // Import FooterTabs component
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.profileImageContainer}>
-        <Image
-          source={{ uri: 'https://www.pngall.com/wp-content/uploads/5/Profile-PNG-Clipart.png' }}
-          style={styles.profileImage}
-        />
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.profileImageContainer}>
+          <Image
+            source={{ uri: 'https://www.pngall.com/wp-content/uploads/5/Profile-PNG-Clipart.png' }}
+            style={styles.profileImage}
+          />
+        </View>
 
-      <Text style={styles.header}>Profile</Text>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Personal Information</Text>
-        <View style={styles.listItem}>
-          <Text style={styles.listItemText}>Name: John Doe</Text>
+        <Text style={styles.header}>Profile</Text>
+        
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Personal Information</Text>
+          <View style={styles.listItem}>
+            <Text style={styles.listItemText}>Name: John Doe</Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listItemText}>Age: 30</Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listItemText}>Location: New York, USA</Text>
+          </View>
         </View>
-        <View style={styles.listItem}>
-          <Text style={styles.listItemText}>Age: 30</Text>
-        </View>
-        <View style={styles.listItem}>
-          <Text style={styles.listItemText}>Location: New York, USA</Text>
-        </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Bio</Text>
-        <Text style={styles.text}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod ex auctor ipsum
-          consequat, nec venenatis quam vulputate.
-        </Text>
-      </View>
-    </ScrollView>
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Bio</Text>
+          <Text style={styles.text}>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod ex auctor ipsum
+            consequat, nec venenatis quam vulputate.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod ex auctor ipsum
+            consequat, nec venenatis quam vulputate.
+          </Text>
+        </View>
+        
+        {/* Spacer to push content above the footer */}
+        <View style={styles.spacer} />
+
+      </ScrollView>
+
+      {/* FooterTabs component positioned at the bottom */}
+      <FooterTabs navigation={navigation} />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: '#FFF',
+  },
+  scrollContainer: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 40,
+    paddingBottom: 60, // Adjust paddingBottom to accommodate the footer
   },
   profileImageContainer: {
     alignItems: 'center',
@@ -76,6 +92,9 @@ const styles = StyleSheet.create({
   },
   listItemText: {
     fontSize: 16,
+  },
+  spacer: {
+    height: 60, // Same as the paddingBottom in scrollContainer
   },
 });
 
