@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "hazardous-orange-waffles",
+    "slug": "snack-1b428e49-8fb7-48ec-9dd4-17fda9cd7d85",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/Company_logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/Company_logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/Company_logo.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/Company_logo.png"
+    }
+  }
+}
