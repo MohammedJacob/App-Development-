@@ -9,18 +9,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.7.2",
+    "apple-signin-auth": "^1.7.6",
+    "axios": "^1.7.3",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "expo": "^51.0.0",
     "express": "^4.19.2",
+    "google-auth-library": "^9.13.0",
+    "jsonwebtoken": "^9.0.2",
     "metro-react-native-babel-transformer": "^0.77.0",
     "mysql2": "^3.11.0",
-    "react-native": "0.74.3",
-    "expo": "^51.0.0",
-    "react": "18.2.0"
+    "react": "18.2.0",
+    "react-native": "0.74.3"
   },
   "description": ""
 }

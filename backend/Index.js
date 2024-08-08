@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
-const pool = require('./database'); // Ensure this is correctly exporting your MySQL connection pool
+const pool = require('./database'); // Import your MySQL connection pool
 
 const app = express();
 const port = 3000;
@@ -47,7 +47,7 @@ const fetchAllTablesAndData = async () => {
   try {
     const [tables] = await pool.query('SHOW TABLES');
     for (const table of tables) {
-      const tableName = table[`Tables_in_patientInfo`];
+      const tableName = table[`Tables_in_patientInfo`]; // Ensure this matches your actual table name format
 
       // Describe the table schema
       const [schema] = await pool.query('DESCRIBE ??', [tableName]);
@@ -79,7 +79,7 @@ app.get('/tables', async (req, res) => {
     res.json(results);
   } catch (err) {
     console.error('Error fetching tables:', err);
-    res.status(500).send(err.message);
+    res.status(500).json({ error: 'Failed to fetch tables', details: err.message });
   }
 });
 
@@ -88,10 +88,31 @@ app.get('/data/:tableName', async (req, res) => {
   const tableName = req.params.tableName;
   try {
     const [results] = await pool.query('SELECT * FROM ??', [tableName]);
+    if (results.length === 0) {
+      return res.status(404).json({ error: `No data found in table ${tableName}` });
+    }
     res.json(results);
   } catch (err) {
     console.error(`Error fetching data from table ${tableName}:`, err);
-    res.status(500).send(err.message);
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      res.status(404).json({ error: `Table ${tableName} not found`, details: err.message });
+    } else {
+      res.status(500).json({ error: 'Failed to fetch data', details: err.message });
+    }
+  }
+});
+
+// Endpoint to fetch card data
+app.get('/api/cards', async (req, res) => {
+  try {
+    const [results] = await pool.query('SELECT * FROM Cards');
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No card data found' });
+    }
+    res.json(results);
+  } catch (err) {
+    console.error('Error fetching cards:', err);
+    res.status(500).json({ error: 'Failed to fetch card data', details: err.message });
   }
 });
 
@@ -120,7 +141,7 @@ app.post('/addPatient', async (req, res) => {
     res.status(201).json({ message: 'Patient added successfully' });
   } catch (err) {
     console.error('Error adding patient:', err);
-    res.status(500).json({ error: 'Failed to add patient' });
+    res.status(500).json({ error: 'Failed to add patient', details: err.message });
   }
 });
 
@@ -141,7 +162,7 @@ app.post('/register', async (req, res) => {
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
     console.error('Error registering user:', err);
-    res.status(500).json({ error: 'Failed to register user' });
+    res.status(500).json({ error: 'Failed to register user', details: err.message });
   }
 });
 
@@ -167,7 +188,7 @@ app.post('/login', async (req, res) => {
     }
   } catch (err) {
     console.error('Error logging in user:', err);
-    res.status(500).json({ error: 'Failed to authenticate user' });
+    res.status(500).json({ error: 'Failed to authenticate user', details: err.message });
   }
 });
 
@@ -180,15 +201,24 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query('SELECT * FROM Patients WHERE email_address = ?', [email]);
+    // Trim and normalize the email
+    const cleanedEmail = email.trim().toLowerCase();
+    console.log('Received email:', cleanedEmail);
+
+    // Query the database for the email
+    const [rows] = await pool.query('SELECT * FROM Patients WHERE LOWER(email_address) = ?', [cleanedEmail]);
+    console.log('Database results:', rows);
+
+    // Handle cases where the email is not found
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Email address not recognized' });
     }
 
+    // Return the found patient data
     res.json({ message: 'Email recognized', data: rows[0] });
   } catch (err) {
     console.error('Error logging in with email:', err);
-    res.status(500).json({ error: 'Failed to log in with email' });
+    res.status(500).json({ error: 'Failed to log in with email', details: err.message });
   }
 });
 

@@ -1,101 +1,79 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, SafeAreaView } from 'react-native';
-import FooterTabs from './components/footer'; // Import FooterTabs component
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import axios from 'axios';
+import { useRoute } from '@react-navigation/native';
 
-const ProfileScreen = ({ navigation }) => {
+const ProfilePage = () => {
+  const route = useRoute();
+  const { userId } = route.params; // Assuming you pass userId as a parameter
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/user/${userId}`);
+        setProfile(response.data);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        Alert.alert('Error', 'Unable to fetch profile information.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.profileImageContainer}>
-          <Image
-            source={{ uri: 'https://www.pngall.com/wp-content/uploads/5/Profile-PNG-Clipart.png' }}
-            style={styles.profileImage}
-          />
+    <View style={styles.container}>
+      {profile ? (
+        <View style={styles.profileInfo}>
+          <Text style={styles.label}>Name:</Text>
+          <Text style={styles.value}>{profile.name}</Text>
+          <Text style={styles.label}>Last Name:</Text>
+          <Text style={styles.value}>{profile.lastName}</Text>
         </View>
-
-        <Text style={styles.header}>Profile</Text>
-        
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Personal Information</Text>
-          <View style={styles.listItem}>
-            <Text style={styles.listItemText}>Name: John Doe</Text>
-          </View>
-          <View style={styles.listItem}>
-            <Text style={styles.listItemText}>Age: 30</Text>
-          </View>
-          <View style={styles.listItem}>
-            <Text style={styles.listItemText}>Location: New York, USA</Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Bio</Text>
-          <Text style={styles.text}>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod ex auctor ipsum
-            consequat, nec venenatis quam vulputate.
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla euismod ex auctor ipsum
-            consequat, nec venenatis quam vulputate.
-          </Text>
-        </View>
-        
-        {/* Spacer to push content above the footer */}
-        <View style={styles.spacer} />
-
-      </ScrollView>
-
-      {/* FooterTabs component positioned at the bottom */}
-      <FooterTabs navigation={navigation} />
-    </SafeAreaView>
+      ) : (
+        <Text>No profile information available.</Text>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 60, // Adjust paddingBottom to accommodate the footer
-  },
-  profileImageContainer: {
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    padding: 16,
   },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  profileInfo: {
+    width: '100%',
+    padding: 16,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  header: {
-    fontSize: 24,
+  label: {
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  text: {
     fontSize: 16,
   },
-  listItem: {
-    flexDirection: 'row',
-    marginBottom: 10,
-  },
-  listItemText: {
+  value: {
     fontSize: 16,
-  },
-  spacer: {
-    height: 60, // Same as the paddingBottom in scrollContainer
+    marginBottom: 8,
   },
 });
 
-export default ProfileScreen;
+export default ProfilePage;
