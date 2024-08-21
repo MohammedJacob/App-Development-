@@ -26,17 +26,18 @@ const PaymentScreen = ({ navigation }) => {
   };
 
   const detectCardType = (number) => {
-    if (number.length >= 4) { // Ensure at least 4 digits before detecting
+    if (number.length >= 4) {
       const cards = creditCardType(number);
       const card = cards[0];
       console.log('Detected Card:', card); // Debugging line
       if (card) {
         setCardType(card.type);
+        console.log('Card Type Detected:', card.type); // Check if 'american-express' is being set
       } else {
         setCardType('');
       }
     } else {
-      setCardType(''); // Clear card type if fewer than 4 digits
+      setCardType(''); 
     }
   };
 
@@ -66,7 +67,7 @@ const PaymentScreen = ({ navigation }) => {
   };
 
   const validateCardNumber = (number) => {
-    const cardNumber = number.replace(/\s+/g, ''); // Remove spaces
+    const cardNumber = number.replace(/\s+/g, '');
     let sum = 0;
     let shouldDouble = false;
 
@@ -120,8 +121,8 @@ const PaymentScreen = ({ navigation }) => {
         return 'https://www.pngall.com/wp-content/uploads/2017/05/Visa-Logo-Free-Download-PNG.png';
       case 'mastercard':
         return 'https://pngimg.com/d/mastercard_PNG16.png';
-      case 'amex': // Added for American Express
-        return 'https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg';
+      case 'american-express':
+        return 'https://1000logos.net/wp-content/uploads/2016/10/American-Express-Color.png';
       default:
         return null;
     }
@@ -145,7 +146,7 @@ const PaymentScreen = ({ navigation }) => {
           value={cardNumber}
           onChangeText={handleCardNumberChange}
           keyboardType="numeric"
-          maxLength={19} // Allows the maximum length of a card number
+          maxLength={19} 
         />
 
         {getCardLogo() && (
@@ -163,7 +164,7 @@ const PaymentScreen = ({ navigation }) => {
           value={expiryDate}
           onChangeText={handleExpiryDateChange}
           keyboardType="numeric"
-          maxLength={5} // For MM/YY format
+          maxLength={5} 
         />
         
         <TextInput
@@ -172,7 +173,7 @@ const PaymentScreen = ({ navigation }) => {
           value={cvv}
           onChangeText={handleCvvChange}
           keyboardType="numeric"
-          maxLength={3} // CVV length
+          maxLength={3}
         />
       </View>
 
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   cardNumberInput: {
-    paddingRight: 50, // Add padding to avoid overlap with the logo
+    paddingRight: 50,
   },
   cardLogo: {
     position: 'absolute',

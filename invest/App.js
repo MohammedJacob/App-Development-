@@ -256,11 +256,12 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 28,
     fontWeight: 'bold'
   },
   cardPrice: {
-    fontSize: 16,
+    fontSize: 24,
+    fontWeight:'bold',
     color: '#34c659'
   },
   cardTarget: {

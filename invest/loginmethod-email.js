@@ -17,25 +17,27 @@ export default function LoginMethodEmail({ navigation }) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-
+  
     if (!password) {
       Alert.alert('Invalid Password', 'Password is required.');
       return;
     }
-
+  
     try {
       const response = await axios.post('http://192.168.1.241:3000/loginWithEmail', { email, password });
       if (response.data.error) {
         Alert.alert('Error', response.data.error);
       } else {
         Alert.alert('Success', response.data.message);
-        navigation.navigate('Home', { userData: response.data.data });
+        // Pass the user data to the profile screen
+        navigation.navigate('Profile', { userData: response.data.userData });
       }
     } catch (error) {
       console.error('API request error:', error.response?.data || error.message);
       Alert.alert('Error', 'An error occurred during login. Please try again.');
     }
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>

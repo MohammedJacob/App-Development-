@@ -237,22 +237,16 @@ app.post('/loginWithEmail', async (req, res) => {
 // Endpoint to fetch profile data for a specific email
 app.get('/profile/:email', async (req, res) => {
   const email = req.params.email;
-  
-  // Log the raw email value from the request
-  console.log(`Raw email parameter: ${email}`);
 
   // Clean and format the email
   const cleanedEmail = email.trim().toLowerCase();
 
   try {
-    // Log the cleaned email
-    console.log(`Cleaned email: ${cleanedEmail}`);
-
-    // Query the database
-    const [results] = await pool.query('SELECT name, last_name, email_address FROM Patients WHERE LOWER(email_address) = ?', [cleanedEmail]);
-
-    // Log the query result
-    console.log('Query result:', results);
+    // Query the database for specific fields
+    const [results] = await pool.query(
+      'SELECT name, last_name, joined_date, email_address FROM Patients WHERE LOWER(email_address) = ?',
+      [cleanedEmail]
+    );
 
     if (results.length === 0) {
       return res.status(404).json({ error: 'Profile not found' });
@@ -264,6 +258,36 @@ app.get('/profile/:email', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch profile', details: err.message });
   }
 });
+
+// Endpoint to update user profile
+app.put('/updateProfile', async (req, res) => {
+  const { email, username } = req.body;
+
+  if (!email || !username) {
+    return res.status(400).json({ error: 'Email and username are required' });
+  }
+
+  try {
+    const updateQuery = `
+      UPDATE Patients 
+      SET name = COALESCE(?, name),
+          last_name = COALESCE(?, last_name),
+          email_address = COALESCE(?, email_address)
+      WHERE email_address = ?
+    `;
+    const [result] = await pool.query(updateQuery, [username, username, email, email]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'No user found with that email' });
+    }
+
+    res.json({ message: 'Profile updated successfully', username });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ error: 'Failed to update profile', details: err.message });
+  }
+});
+
 
 // Start the server
 app.listen(port, () => {
