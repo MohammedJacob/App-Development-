@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, SafeAreaView, TextInput, TouchableOpacity, Alert } from 'react-native';
-import FooterTabs from './components/footer';
+import FooterTabs from './components/footer'; // Assuming you have a FooterTabs component
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
 
 const ProfileScreen = ({ route, navigation }) => {
+  // Initial user data from route params or an empty object
   const initialUserData = route?.params?.userData || {};
   
   const [userData, setUserData] = useState(initialUserData);
@@ -14,6 +15,7 @@ const ProfileScreen = ({ route, navigation }) => {
   const [profileImage, setProfileImage] = useState(userData.profile_image_url || '');
 
   useEffect(() => {
+    // Request permission to access media library
     (async () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
@@ -23,6 +25,7 @@ const ProfileScreen = ({ route, navigation }) => {
   }, []);
 
   const handleEditPress = () => {
+    // Toggle editing mode
     setIsEditing(!isEditing);
   };
 
@@ -32,6 +35,7 @@ const ProfileScreen = ({ route, navigation }) => {
     formData.append('username', username);
     
     if (profileImage) {
+      // Handle image upload
       const localUri = profileImage.startsWith('file://') 
         ? profileImage 
         : (await FileSystem.downloadAsync(profileImage, FileSystem.cacheDirectory + 'temp.jpg')).uri;

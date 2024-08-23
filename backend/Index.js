@@ -116,6 +116,32 @@ app.get('/api/cards', async (req, res) => {
   }
 });
 
+// Endpoint to update a card's price
+app.put('/api/cards/:id', async (req, res) => {
+  const cardId = req.params.id;
+  const { price } = req.body;
+
+  if (price === undefined || isNaN(price) || parseFloat(price) <= 0) {
+    return res.status(400).json({ error: 'Valid price is required' });
+  }
+
+  try {
+    const [result] = await pool.query(
+      'UPDATE Cards SET price = ? WHERE id = ?',
+      [price, cardId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    res.json({ message: 'Card price updated successfully' });
+  } catch (err) {
+    console.error('Error updating card price:', err);
+    res.status(500).json({ error: 'Failed to update card price', details: err.message });
+  }
+});
+
 // Endpoint to add a new patient
 app.post('/addPatient', async (req, res) => {
   const { name, last_name, email_address, password, joined_date } = req.body;
@@ -203,91 +229,27 @@ app.post('/loginWithEmail', async (req, res) => {
   try {
     const cleanedEmail = email.trim().toLowerCase();
 
-    // Log the cleaned email
-    console.log(`Attempting to login with email: ${cleanedEmail}`);
+    // Log the cleaned email and password
+    console.log(`Cleaned email: ${cleanedEmail}, Password: ${password}`);
 
-    // Query the database for the user
-    const [rows] = await pool.query('SELECT * FROM Patients WHERE LOWER(email_address) = ?', [cleanedEmail]);
-
-    // Log the query result
-    console.log('Query result:', rows);
+    const [rows] = await pool.query('SELECT hashed_password FROM Patients WHERE email_address = ?', [cleanedEmail]);
 
     if (rows.length === 0) {
-      return res.status(404).json({ error: 'Email address not recognized' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Ensure the password field is present and hashed
-    if (!rows[0].password) {
-      return res.status(500).json({ error: 'Password field missing in database' });
-    }
-
-    const isMatch = await bcrypt.compare(password, rows[0].password);
+    const isMatch = await bcrypt.compare(password, rows[0].hashed_password);
 
     if (isMatch) {
-      res.json({ message: 'Login successful', userData: rows[0] });
+      res.json({ message: 'Login successful' });
     } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: 'Invalid email or password' });
     }
   } catch (err) {
     console.error('Error logging in with email:', err);
-    res.status(500).json({ error: 'Failed to login with email', details: err.message });
+    res.status(500).json({ error: 'Failed to authenticate user', details: err.message });
   }
 });
-
-// Endpoint to fetch profile data for a specific email
-app.get('/profile/:email', async (req, res) => {
-  const email = req.params.email;
-
-  // Clean and format the email
-  const cleanedEmail = email.trim().toLowerCase();
-
-  try {
-    // Query the database for specific fields
-    const [results] = await pool.query(
-      'SELECT name, last_name, joined_date, email_address FROM Patients WHERE LOWER(email_address) = ?',
-      [cleanedEmail]
-    );
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Profile not found' });
-    }
-
-    res.json(results[0]);
-  } catch (err) {
-    console.error('Error fetching profile:', err);
-    res.status(500).json({ error: 'Failed to fetch profile', details: err.message });
-  }
-});
-
-// Endpoint to update user profile
-app.put('/updateProfile', async (req, res) => {
-  const { email, username } = req.body;
-
-  if (!email || !username) {
-    return res.status(400).json({ error: 'Email and username are required' });
-  }
-
-  try {
-    const updateQuery = `
-      UPDATE Patients 
-      SET name = COALESCE(?, name),
-          last_name = COALESCE(?, last_name),
-          email_address = COALESCE(?, email_address)
-      WHERE email_address = ?
-    `;
-    const [result] = await pool.query(updateQuery, [username, username, email, email]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'No user found with that email' });
-    }
-
-    res.json({ message: 'Profile updated successfully', username });
-  } catch (err) {
-    console.error('Error updating profile:', err);
-    res.status(500).json({ error: 'Failed to update profile', details: err.message });
-  }
-});
-
 
 // Start the server
 app.listen(port, () => {

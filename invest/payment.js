@@ -10,10 +10,11 @@ const PaymentScreen = ({ navigation }) => {
   const [formComplete, setFormComplete] = useState(false);
   const [cardType, setCardType] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [price, setPrice] = useState(''); // New state for price
 
   useEffect(() => {
     validateForm();
-  }, [cardholderName, cardNumber, expiryDate, cvv]);
+  }, [cardholderName, cardNumber, expiryDate, cvv, price]);
 
   const handleCardholderNameChange = (text) => {
     setCardholderName(text);
@@ -66,6 +67,11 @@ const PaymentScreen = ({ navigation }) => {
     }
   };
 
+  const handlePriceChange = (text) => {
+    const formattedText = text.replace(/[^0-9.]/g, '');
+    setPrice(formattedText);
+  };
+
   const validateCardNumber = (number) => {
     const cardNumber = number.replace(/\s+/g, '');
     let sum = 0;
@@ -90,7 +96,7 @@ const PaymentScreen = ({ navigation }) => {
 
   const validateForm = () => {
     if (cardholderName && cardNumber && validateCardNumber(cardNumber) &&
-        expiryDate.length === 5 && cvv.length === 3) {
+        expiryDate.length === 5 && cvv.length === 3 && price) {
       setFormComplete(true);
       setErrorMessage('');
     } else {
@@ -103,6 +109,8 @@ const PaymentScreen = ({ navigation }) => {
         setErrorMessage('Expiry date must be in MM/YY format');
       } else if (cvv.length !== 3) {
         setErrorMessage('CVV must be 3 digits');
+      } else if (!price) {
+        setErrorMessage('Price cannot be empty');
       } else {
         setErrorMessage('');
       }
@@ -111,6 +119,7 @@ const PaymentScreen = ({ navigation }) => {
 
   const handleSubmit = () => {
     if (formComplete) {
+      console.log('Form submitted with price:', price);
       navigation.navigate('Home');
     }
   };
@@ -177,6 +186,14 @@ const PaymentScreen = ({ navigation }) => {
         />
       </View>
 
+      <TextInput
+        style={styles.input}
+        placeholder="Enter Price"
+        value={price}
+        onChangeText={handlePriceChange}
+        keyboardType="numeric"
+      />
+
       {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
 
       <Button
@@ -235,4 +252,3 @@ const styles = StyleSheet.create({
 });
 
 export default PaymentScreen;
-

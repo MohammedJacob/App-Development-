@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
-import { SafeAreaView, TextInput, StyleSheet, TouchableOpacity, Text, Alert, View, Image, ActivityIndicator } from 'react-native';
+import { SafeAreaView, TextInput, StyleSheet, TouchableOpacity, Text, Alert, View, Image, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import * as AppleAuthentication from 'expo-apple-authentication'; // Import for Apple sign-in
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 const SignupPage = () => {
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState(''); // State for confirm password
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     name: '',
     lastName: '',
     emailAddress: '',
     password: '',
-    confirmPassword: '', // Error state for confirm password
+    confirmPassword: '',
   });
 
   const navigation = useNavigation();
@@ -28,7 +28,7 @@ const SignupPage = () => {
       lastName: '',
       emailAddress: '',
       password: '',
-      confirmPassword: '', // Reset confirm password errors
+      confirmPassword: '',
     });
 
     let isValid = true;
@@ -72,7 +72,7 @@ const SignupPage = () => {
       const response = await axios.post('http://192.168.1.241:3000/addPatient', {
         name,
         last_name: lastName,
-        email_address: emailAddress.trim().toLowerCase(), // Ensure email is lowercased
+        email_address: emailAddress.trim().toLowerCase(),
         password,
         joined_date: new Date().toISOString().split('T')[0]
       });
@@ -101,7 +101,6 @@ const SignupPage = () => {
       });
 
       if (identityToken) {
-        // Handle user sign-in and/or registration here
         console.log({ identityToken, fullName, email });
       } else {
         Alert.alert('Error', 'Apple sign-in was canceled');
@@ -117,79 +116,88 @@ const SignupPage = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-      />
-      {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={name}
+              onChangeText={setName}
+            />
+            {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Last Name"
-        value={lastName}
-        onChangeText={setLastName}
-      />
-      {errors.lastName ? <Text style={styles.errorText}>{errors.lastName}</Text> : null}
+            <TextInput
+              style={styles.input}
+              placeholder="Last Name"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+            {errors.lastName ? <Text style={styles.errorText}>{errors.lastName}</Text> : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email Address"
-        value={emailAddress}
-        onChangeText={setEmailAddress}
-        autoCapitalize="none"
-      />
-      {errors.emailAddress ? <Text style={styles.errorText}>{errors.emailAddress}</Text> : null}
+            <TextInput
+              style={styles.input}
+              placeholder="Email Address"
+              value={emailAddress}
+              onChangeText={setEmailAddress}
+              autoCapitalize="none"
+            />
+            {errors.emailAddress ? <Text style={styles.errorText}>{errors.emailAddress}</Text> : null}
 
-      <View style={styles.passwordContainer}>
-        <TextInput
-          style={styles.passwordInput}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!showPassword} // Toggle visibility
-          autoCapitalize="none"
-        />
-        <TouchableOpacity 
-          onPress={() => setShowPassword(!showPassword)} 
-          style={styles.showPasswordButton}
-        >
-          <Image
-            source={{ uri: showPassword ? 'https://img.icons8.com/material-outlined/24/000000/visible.png' : 'https://img.icons8.com/material-outlined/24/000000/invisible.png' }}
-            style={styles.icon}
-          />
-        </TouchableOpacity>
-      </View>
-      {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)} 
+                style={styles.showPasswordButton}
+              >
+                <Image
+                  source={{ uri: showPassword ? 'https://img.icons8.com/material-outlined/24/000000/visible.png' : 'https://img.icons8.com/material-outlined/24/000000/invisible.png' }}
+                  style={styles.icon}
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry={!showPassword} // Ensure confirm password visibility matches password field
-        autoCapitalize="none"
-      />
-      {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>SUBMIT</Text>
-      </TouchableOpacity>
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+              <Text style={styles.buttonText}>SUBMIT</Text>
+            </TouchableOpacity>
+            {loading && <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />}
 
-      <View style={styles.iconContainer}>
-        <TouchableOpacity onPress={handleGoogleLogin}>
-          <Image source={{ uri: 'https://banner2.cleanpng.com/20180521/ers/kisspng-google-logo-5b02bbe1d5c6e0.2384399715269058258756.jpg' }} style={styles.iconGoogle} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleAppleLogin}>
-          <Image source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCvh-j7HsTHJ8ZckknAoiZMx9VcFmsFkv72g&s' }} style={styles.iconApple} />
-        </TouchableOpacity>
-      </View>
+            <View style={styles.iconContainer}>
+              <TouchableOpacity onPress={handleGoogleLogin}>
+                <Image source={{ uri: 'https://banner2.cleanpng.com/20180521/ers/kisspng-google-logo-5b02bbe1d5c6e0.2384399715269058258756.jpg' }} style={styles.iconGoogle} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAppleLogin}>
+                <Image source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCvh-j7HsTHJ8ZckknAoiZMx9VcFmsFkv72g&s' }} style={styles.iconApple} />
+              </TouchableOpacity>
+            </View>
 
-      <TouchableOpacity onPress={handleSignInPress} style={styles.signInLink}>
-        <Text style={styles.signInText}>Already have an account? Sign in</Text>
-      </TouchableOpacity>
+            <TouchableOpacity onPress={handleSignInPress} style={styles.signInLink}>
+              <Text style={styles.signInText}>Already have an account? Sign in</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -197,9 +205,19 @@ const SignupPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#fff',
+    marginTop:40
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  form: {
+    width: '100%',
+    maxWidth: 400,
+    paddingHorizontal: 16,
   },
   input: {
     height: 50,
@@ -210,12 +228,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    position: 'relative',
     marginBottom: 16,
   },
   passwordInput: {
-    flex: 1,
     height: 50,
     borderColor: '#6ba5fb',
     borderWidth: 2,
@@ -236,40 +252,46 @@ const styles = StyleSheet.create({
     height: 24,
   },
   button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    borderRadius: 8,
+    backgroundColor: '#6ba5fb',
+    paddingVertical: 15,
+    borderRadius: 11,
     alignItems: 'center',
+    marginBottom: 16,
   },
   buttonText: {
     color: '#fff',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
-  iconContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 20,
-  },
-  iconGoogle: {
-    width: 48, 
-    height: 48,
-  },
-  iconApple: {
-    width: 48, 
-    height: 48,
-  },
-  signInLink: {
-    alignItems: 'center',
-  },
-  signInText: {
-    color: '#007AFF',
-    textDecorationLine: 'underline',
+  loader: {
+    marginTop: 10,
   },
   errorText: {
     color: 'red',
-    marginBottom: 8,
+    marginBottom: 10,
+    marginTop: -10,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  iconGoogle: {
+    width: 50,
+    height: 50,
+    marginRight: 16,
+  },
+  iconApple: {
+    width: 50,
+    height: 50,
+  },
+  signInLink: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  signInText: {
+    color: '#6ba5fb',
+    fontSize: 16,
   },
 });
 
