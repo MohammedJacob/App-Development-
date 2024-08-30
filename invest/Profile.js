@@ -88,7 +88,7 @@ const ProfileScreen = ({ route, navigation }) => {
         <View style={styles.profileContainer}>
           <TouchableOpacity onPress={handleImagePick} style={styles.imageWrapper}>
             <Image
-              source={{ uri: profileImage || 'https://seeklogo.com/images/M/man-silhouette-logo-081359B969-seeklogo.com.png' }}
+              source={{ uri: profileImage || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' }}
               style={styles.profileImage}
             />
           </TouchableOpacity>
@@ -105,7 +105,7 @@ const ProfileScreen = ({ route, navigation }) => {
           <TouchableOpacity style={styles.editButton} onPress={isEditing ? handleSavePress : handleEditPress}>
             <Text style={styles.editButtonText}>{isEditing ? 'Save' : 'Edit'}</Text>
           </TouchableOpacity>
-          <Text style={styles.email}>{userData.email_address || 'example@example.com'}</Text>
+          <Text style={styles.email}>{userData.email_address || 'guest@example.com'}</Text>
         </View>
 
         <View style={styles.infoContainer}>
@@ -163,8 +163,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
+    width: '120%',
+    height: '120%',
     borderRadius: 10,
   },
   username: {

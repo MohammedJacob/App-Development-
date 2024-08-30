@@ -11,6 +11,7 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Separate state for confirm password
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     name: '',
@@ -162,20 +163,31 @@ const SignupPage = () => {
               >
                 <Image
                   source={{ uri: showPassword ? 'https://img.icons8.com/material-outlined/24/000000/visible.png' : 'https://img.icons8.com/material-outlined/24/000000/invisible.png' }}
-                  style={styles.icon}
+                  style={styles.showPasswordsicon}
                 />
               </TouchableOpacity>
             </View>
             {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
 
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword} // Updated to use showConfirmPassword
+                autoCapitalize="none"
+              />
+              <TouchableOpacity 
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)} 
+                style={styles.showPasswordButton}
+              >
+                <Image
+                  source={{ uri: showConfirmPassword ? 'https://img.icons8.com/material-outlined/24/000000/visible.png' : 'https://img.icons8.com/material-outlined/24/000000/invisible.png' }}
+                  style={styles.showPasswordsicon}
+                />
+              </TouchableOpacity>
+            </View>
             {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
 
             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
@@ -247,9 +259,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  icon: {
-    width: 24,
-    height: 24,
+  showPasswordsicon: {
+    width: 20,
+    height: 20,
   },
   button: {
     backgroundColor: '#6ba5fb',

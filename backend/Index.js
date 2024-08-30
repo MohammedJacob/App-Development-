@@ -218,7 +218,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Endpoint to login with email and password
+// Endpoint to authenticate a user with email
 app.post('/loginWithEmail', async (req, res) => {
   const { email, password } = req.body;
 
@@ -228,25 +228,24 @@ app.post('/loginWithEmail', async (req, res) => {
 
   try {
     const cleanedEmail = email.trim().toLowerCase();
-
-    // Log the cleaned email and password
-    console.log(`Cleaned email: ${cleanedEmail}, Password: ${password}`);
-
-    const [rows] = await pool.query('SELECT hashed_password FROM Patients WHERE email_address = ?', [cleanedEmail]);
+    const [rows] = await pool.query('SELECT * FROM Patients WHERE email_address = ?', [cleanedEmail]);
 
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const isMatch = await bcrypt.compare(password, rows[0].hashed_password);
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (isMatch) {
-      res.json({ message: 'Login successful' });
+      // Return user data except the password
+      const { password, ...userData } = user;
+      res.json({ message: 'Login successful', userData });
     } else {
       res.status(401).json({ error: 'Invalid email or password' });
     }
   } catch (err) {
-    console.error('Error logging in with email:', err);
+    console.error('Error logging in user:', err);
     res.status(500).json({ error: 'Failed to authenticate user', details: err.message });
   }
 });

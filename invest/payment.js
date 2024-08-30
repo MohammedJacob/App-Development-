@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image } from 'react-native';
+import axios from 'axios';  // Import Axios
 import creditCardType from 'credit-card-type';
 
-const PaymentScreen = ({ navigation }) => {
+const PaymentScreen = ({ navigation, route }) => {
   const [cardholderName, setCardholderName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -11,6 +12,9 @@ const PaymentScreen = ({ navigation }) => {
   const [cardType, setCardType] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [price, setPrice] = useState(''); // New state for price
+
+  // Assume the card ID is passed through navigation or route params
+  const cardId = route.params?.cardId || ''; // Adjust according to your navigation
 
   useEffect(() => {
     validateForm();
@@ -30,10 +34,8 @@ const PaymentScreen = ({ navigation }) => {
     if (number.length >= 4) {
       const cards = creditCardType(number);
       const card = cards[0];
-      console.log('Detected Card:', card); // Debugging line
       if (card) {
         setCardType(card.type);
-        console.log('Card Type Detected:', card.type); // Check if 'american-express' is being set
       } else {
         setCardType('');
       }
@@ -117,13 +119,6 @@ const PaymentScreen = ({ navigation }) => {
     }
   };
 
-  const handleSubmit = () => {
-    if (formComplete) {
-      console.log('Form submitted with price:', price);
-      navigation.navigate('Home');
-    }
-  };
-
   const getCardLogo = () => {
     switch (cardType) {
       case 'visa':
@@ -195,12 +190,6 @@ const PaymentScreen = ({ navigation }) => {
       />
 
       {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
-
-      <Button
-        title="Submit"
-        onPress={handleSubmit}
-        disabled={!formComplete}
-      />
     </View>
   );
 };
