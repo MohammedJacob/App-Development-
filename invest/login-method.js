@@ -32,10 +32,10 @@ const LoginMethod = () => {
             </TouchableOpacity>
             <View style={styles.iconContainer}>
               <TouchableOpacity onPress={handleGoogleLogin}>
-                <Image source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }} style={styles.icon} />
+                <Image source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }} style={styles.iconGoogle} />
               </TouchableOpacity>
               <TouchableOpacity onPress={() => navigation.navigate('Onboarding')}>
-                <Image source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCvh-j7HsTHJ8ZckknAoiZMx9VcFmsFkv72g&s' }} style={styles.icon} />
+                <Image source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCvh-j7HsTHJ8ZckknAoiZMx9VcFmsFkv72g&s' }} style={styles.iconApple} />
               </TouchableOpacity>
             </View>
             <Text style={styles.footerText}>
@@ -110,6 +110,16 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
+
+  iconGoogle: {
+    width: 50,
+    height: 40,
+    marginRight: 16,
+  },
+  iconApple: {
+    width: 35,
+    height: 35,
+  },
   buttonTextEmail: {
     color: 'white',
     fontSize: 16,
@@ -117,9 +127,9 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '50%',
+    justifyContent: 'space-evenly',
     marginBottom: 30,
+    gap:80
   },
   icon: {
     width: 36,

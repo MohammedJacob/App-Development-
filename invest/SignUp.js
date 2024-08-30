@@ -197,7 +197,7 @@ const SignupPage = () => {
 
             <View style={styles.iconContainer}>
               <TouchableOpacity onPress={handleGoogleLogin}>
-                <Image source={{ uri: 'https://banner2.cleanpng.com/20180521/ers/kisspng-google-logo-5b02bbe1d5c6e0.2384399715269058258756.jpg' }} style={styles.iconGoogle} />
+                <Image source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }} style={styles.iconGoogle} />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleAppleLogin}>
                 <Image source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCvh-j7HsTHJ8ZckknAoiZMx9VcFmsFkv72g&s' }} style={styles.iconApple} />
@@ -285,17 +285,17 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
     marginTop: 16,
   },
   iconGoogle: {
     width: 50,
-    height: 50,
+    height: 40,
     marginRight: 16,
   },
   iconApple: {
-    width: 50,
-    height: 50,
+    width: 35,
+    height: 35,
   },
   signInLink: {
     marginTop: 16,
