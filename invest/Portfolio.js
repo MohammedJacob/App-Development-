@@ -6,12 +6,12 @@ import { LineChart } from 'react-native-chart-kit';
 const data = {
   portfolio: [
     { id: '1', name: 'Cuberto', amount: '$1,200.87', dividends: '$40 dividends' },
-    { id: '2', name: 'Healthily Ltd.', amount: '$3,467.32', dividends: '$120 dividends' },
+    { id: '2', name: 'Healthily Ltd.', amount: '$0,467.32', dividends: '$120 dividends' },
     { id: '3', name: 'Neotroy', amount: '$2,837.41', dividends: '$70 dividends' },
   ],
   futureProjections: {
     amount: '$2.4M',
-    graphData: [2200, 2400, 2600, 2800, 3000, 3200],
+    graphData: [2200, 2400, 1600, 3200, 1000, 3200],
   },
   upcomingEvents: [
     { id: '1', event: 'A property in your area is distributing dividends' },

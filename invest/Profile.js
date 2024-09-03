@@ -1,15 +1,15 @@
+// ProfileScreen.js
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, SafeAreaView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import FooterTabs from './components/footer'; // Assuming you have a FooterTabs component
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
+import { useUser } from './UserContext'; // Import useUser hook
 
-const ProfileScreen = ({ route, navigation }) => {
-  // Initial user data from route params or an empty object
-  const initialUserData = route?.params?.userData || {};
-  
-  const [userData, setUserData] = useState(initialUserData);
+const ProfileScreen = ({ navigation }) => {
+  const { userData, setUserData } = useUser(); // Access user data and setter from context
+
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(`${userData.name || ''} ${userData.last_name || ''}`);
   const [profileImage, setProfileImage] = useState(userData.profile_image_url || '');
@@ -56,7 +56,7 @@ const ProfileScreen = ({ route, navigation }) => {
       });
       console.log('Response from server:', response.data);
       Alert.alert('Success', 'Profile updated successfully!');
-      setUserData({ ...userData, name: username.split(' ')[0], last_name: username.split(' ')[1], profile_image_url: profileImage }); // Update local userData with new values
+      setUserData({ ...userData, name: username.split(' ')[0], last_name: username.split(' ')[1], profile_image_url: profileImage }); // Update userData in context
     } catch (error) {
       console.error('Error updating user data:', error.response ? error.response.data : error.message);
       Alert.alert('Error', 'There was a problem updating your profile. Please try again.');

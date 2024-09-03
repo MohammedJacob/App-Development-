@@ -142,7 +142,6 @@ const styles = StyleSheet.create({
   },
   link: {
     color: '#007bff',
-    textDecorationLine: 'underline',
   },
 });
 

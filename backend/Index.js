@@ -250,6 +250,41 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 });
 
+// Endpoint to add a new investment
+app.post('/api/investments', async (req, res) => {
+  const { user_id, property_id, amount_invested } = req.body;
+
+  // Validate input
+  if (!user_id || !property_id || amount_invested === undefined || isNaN(amount_invested) || parseFloat(amount_invested) <= 0) {
+    return res.status(400).json({ error: 'Valid user_id, property_id, and amount_invested are required' });
+  }
+
+  try {
+    // Check if the user exists
+    const [userExists] = await pool.query('SELECT 1 FROM Users WHERE id = ?', [user_id]);
+    if (userExists.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if the property exists
+    const [propertyExists] = await pool.query('SELECT 1 FROM Properties WHERE id = ?', [property_id]);
+    if (propertyExists.length === 0) {
+      return res.status(404).json({ error: 'Property not found' });
+    }
+
+    // Insert the investment into the database
+    const [result] = await pool.query(
+      'INSERT INTO Investments (user_id, property_id, amount_invested) VALUES (?, ?, ?)',
+      [user_id, property_id, amount_invested]
+    );
+
+    res.status(201).json({ message: 'Investment added successfully', investmentId: result.insertId });
+  } catch (err) {
+    console.error('Error adding investment:', err);
+    res.status(500).json({ error: 'Failed to add investment', details: err.message });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { SafeAreaView, TextInput, StyleSheet, TouchableOpacity, Text, Alert, View, Image } from 'react-native';
 import axios from 'axios';
+import { useUser } from './UserContext'; // Import useUser hook
 
 export default function LoginMethodEmail({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false); // New state for password visibility
+  const { setUserData } = useUser(); // Access setUserData function from context
 
   const validateEmail = (email) => {
     const re = /\S+@\S+\.\S+/;
@@ -28,17 +30,16 @@ export default function LoginMethodEmail({ navigation }) {
       if (response.data.error) {
         Alert.alert('Error', response.data.error);
       } else {
-        Alert.alert('Success', response.data.message);
-        // Pass the user data to the profile screen
-        navigation.navigate('Profile', { userData: response.data.userData });
+        // Store user data in context
+        setUserData(response.data.userData);
+        // Navigate to Home screen and pass email address
+        navigation.navigate('Home', { email });
       }
     } catch (error) {
-      console.error('API request error:', error.response?.data || error.message);
-      Alert.alert('Error', 'An error occurred during login. Please try again.');
+      Alert.prompt('API request error:', error.response?.data || error.message);
+      Alert.alert('Error', 'Email or passowrd is incorrect please try again .');
     }
   };
-  
-  
 
   return (
     <SafeAreaView style={styles.container}>

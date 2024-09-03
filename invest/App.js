@@ -19,6 +19,7 @@ import { Card as PaperCard } from 'react-native-paper';
 import SettingsImage from './assets/settings.png';
 import SearchIcon from './assets/SearchIcon.png';
 import Footer from './components/footer';
+import { UserProvider } from './UserContext'; // Import the UserProvider
 import SettingsScreen from './SettingScreen';
 import LoginMethod from './login-method';
 import LoginMethodEmail from './loginmethod-email';
@@ -173,26 +174,29 @@ const DetailsScreen = ({ route, navigation }) => {
   const handleInvest = async () => {
     // Validate if investment amount exceeds remaining amount
     if (parseFloat(investmentAmount) > remainingAmount) {
-      Alert.alert(`Amount entered exceeds the remaining traget price`);
+      Alert.alert(`Amount entered exceeds the remaining target price`);
       return;
     }
     if (!nameOnCard || !cvv || !expiryDate || !investmentAmount) {
       Alert.alert('Input Error', 'Please fill out all fields.');
       return;
     }
-
+  
     try {
+      // Calculate the new price by adding the investment amount to the current price
+      const newPrice = (currentPrice + parseFloat(investmentAmount)).toFixed(2);
+  
       // Update the card price
       const response = await fetch(`http://192.168.1.241:3000/api/cards/${card.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ price: investmentAmount }),
+        body: JSON.stringify({ price: newPrice }),
       });
-
+  
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
+  
       const updatedCard = await response.json();
       Alert.alert('Success', 'Card price updated successfully.');
       navigation.navigate('Home', { card: updatedCard, investmentAmount });
@@ -201,6 +205,7 @@ const DetailsScreen = ({ route, navigation }) => {
       Alert.alert('Update Error', 'Failed to update card price. Please try again later.');
     }
   };
+  
 
   // Formatting functions
   const formatCardNumber = (text) => {
@@ -318,6 +323,7 @@ const DetailsScreen = ({ route, navigation }) => {
 
 // App component
 const App = () => (
+  <UserProvider> 
   <NavigationContainer>
     <Stack.Navigator initialRouteName="SignUp">
       <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
@@ -337,6 +343,7 @@ const App = () => (
       <Stack.Screen name="Onboarding" component={Onboarding} />
     </Stack.Navigator>
   </NavigationContainer>
+  </UserProvider>
 );
 
 const styles = StyleSheet.create({
@@ -370,7 +377,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: { 
     flexDirection: 'row', 
-    justifyContent: 'center', 
+    justifyContent: 'space-evenly', 
     borderBottomWidth: 1, 
     borderBottomColor: '#ccc' 
   },
@@ -386,8 +393,8 @@ const styles = StyleSheet.create({
     color: '#000' 
   },
   activeTabIndicator: { 
-    height: 2, 
-    backgroundColor: '#000', 
+    height: 3, 
+    backgroundColor: '#34c659', 
     marginTop: 8 
   },
   scrollView: { 
