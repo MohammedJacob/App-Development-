@@ -250,6 +250,23 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 });
 
+// Endpoint to fetch portfolio data
+app.get('/api/portfolio', async (req, res) => {
+  try {
+    const [results] = await pool.query(`
+      SELECT id, name, amount, dividends
+      FROM Portfolio
+      WHERE /* Your conditions here */`);
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No portfolio data found' });
+    }
+    res.json(results);
+  } catch (err) {
+    console.error('Error fetching portfolio data:', err);
+    res.status(500).json({ error: 'Failed to fetch portfolio data', details: err.message });
+  }
+});
+
 // Endpoint to add a new investment
 app.post('/api/investments', async (req, res) => {
   const { user_id, property_id, amount_invested } = req.body;
