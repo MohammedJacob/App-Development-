@@ -227,22 +227,16 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 
   try {
-    const cleanedEmail = email.trim().toLowerCase();
-    const [rows] = await pool.query('SELECT * FROM Patients WHERE email_address = ?', [cleanedEmail]);
-
+    const [rows] = await pool.query('SELECT password FROM Patients WHERE email_address = ?', [email]);
     if (rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const user = rows[0];
-    const isMatch = await bcrypt.compare(password, user.password);
-
+    const isMatch = await bcrypt.compare(password, rows[0].password);
     if (isMatch) {
-      // Return user data except the password
-      const { password, ...userData } = user;
-      res.json({ message: 'Login successful', userData });
+      res.json({ message: 'Login successful' });
     } else {
-      res.status(401).json({ error: 'Invalid email or password' });
+      res.status(401).json({ error: 'Invalid credentials' });
     }
   } catch (err) {
     console.error('Error logging in user:', err);
@@ -250,59 +244,27 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 });
 
-// Endpoint to fetch portfolio data
-app.get('/api/portfolio', async (req, res) => {
-  try {
-    const [results] = await pool.query(`
-      SELECT id, name, amount, dividends
-      FROM Portfolio
-      WHERE /* Your conditions here */`);
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'No portfolio data found' });
-    }
-    res.json(results);
-  } catch (err) {
-    console.error('Error fetching portfolio data:', err);
-    res.status(500).json({ error: 'Failed to fetch portfolio data', details: err.message });
-  }
-});
-
-// Endpoint to add a new investment
+// Endpoint to create a new investment (POST /api/investments)
 app.post('/api/investments', async (req, res) => {
-  const { user_id, property_id, amount_invested } = req.body;
+  const { user_id, card_id, amount_invested } = req.body;
 
-  // Validate input
-  if (!user_id || !property_id || amount_invested === undefined || isNaN(amount_invested) || parseFloat(amount_invested) <= 0) {
-    return res.status(400).json({ error: 'Valid user_id, property_id, and amount_invested are required' });
+  if (!user_id || !card_id || !amount_invested || isNaN(amount_invested) || parseFloat(amount_invested) <= 0) {
+    return res.status(400).json({ error: 'user_id, card_id, and a valid amount_invested are required' });
   }
 
   try {
-    // Check if the user exists
-    const [userExists] = await pool.query('SELECT 1 FROM Users WHERE id = ?', [user_id]);
-    if (userExists.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Check if the property exists
-    const [propertyExists] = await pool.query('SELECT 1 FROM Properties WHERE id = ?', [property_id]);
-    if (propertyExists.length === 0) {
-      return res.status(404).json({ error: 'Property not found' });
-    }
-
-    // Insert the investment into the database
-    const [result] = await pool.query(
-      'INSERT INTO Investments (user_id, property_id, amount_invested) VALUES (?, ?, ?)',
-      [user_id, property_id, amount_invested]
+    await pool.query(
+      'INSERT INTO Investments (user_id, card_id, amount_invested) VALUES (?, ?, ?)',
+      [user_id, card_id, amount_invested]
     );
-
-    res.status(201).json({ message: 'Investment added successfully', investmentId: result.insertId });
+    res.status(201).json({ message: 'Investment created successfully' });
   } catch (err) {
-    console.error('Error adding investment:', err);
-    res.status(500).json({ error: 'Failed to add investment', details: err.message });
+    console.error('Error creating investment:', err);
+    res.status(500).json({ error: 'Failed to create investment', details: err.message });
   }
 });
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
