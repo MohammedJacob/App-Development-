@@ -171,6 +171,31 @@ app.post('/addPatient', async (req, res) => {
   }
 });
 
+// Endpoint to update a user's profile
+app.put('/updateProfile', async (req, res) => {
+  const { id, username, profileImage } = req.body;
+
+  if (!id || !username) {
+    return res.status(400).json({ error: 'ID and username are required' });
+  }
+
+  try {
+    const updateQuery = 'UPDATE Patients SET username = ?, profile_image = ? WHERE id = ?';
+    const values = [username, profileImage || null, id];
+
+    const [result] = await pool.query(updateQuery, values);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
 // Endpoint to register a new user
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
@@ -227,16 +252,21 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query('SELECT password FROM Patients WHERE email_address = ?', [email]);
+    const cleanedEmail = email.trim().toLowerCase();
+    const [rows] = await pool.query('SELECT * FROM Patients WHERE email_address = ?', [cleanedEmail]);
+
     if (rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const isMatch = await bcrypt.compare(password, rows[0].password);
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+
     if (isMatch) {
-      res.json({ message: 'Login successful' });
+      const { password, ...userData } = user;
+      res.json({ message: 'Login successful', userData });
     } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: 'Invalid email or password' });
     }
   } catch (err) {
     console.error('Error logging in user:', err);
@@ -244,27 +274,56 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 });
 
-// Endpoint to create a new investment (POST /api/investments)
-app.post('/api/investments', async (req, res) => {
-  const { user_id, card_id, amount_invested } = req.body;
+app.post('/api/Patients', async (req, res) => {
+  const { email, card_id, amount_invested } = req.body;
 
-  if (!user_id || !card_id || !amount_invested || isNaN(amount_invested) || parseFloat(amount_invested) <= 0) {
-    return res.status(400).json({ error: 'user_id, card_id, and a valid amount_invested are required' });
+  if (!email || !card_id || amount_invested === undefined || isNaN(amount_invested) || parseFloat(amount_invested) <= 0) {
+    return res.status(400).json({ error: 'Valid email, card_id, and amount_invested are required' });
   }
 
   try {
+    // Fetch the patient by email
+    const [user] = await pool.query('SELECT id, invested_stock, invested_amount FROM Patients WHERE email_address = ?', [email]);
+
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'Email not found' });
+    }
+
+    const userId = user[0].id;
+    const existingInvestedStock = user[0].invested_stock || ''; // Default to an empty string if null
+    const existingInvestedAmount = parseFloat(user[0].invested_amount) || 0; // Default to 0 if null
+
+    // Fetch the card title based on card_id
+    const [card] = await pool.query('SELECT title FROM Cards WHERE id = ?', [card_id]);
+    if (card.length === 0) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    const cardTitle = card[0].title;
+
+    // Update invested_stock and invested_amount
+    const updatedInvestedStock = existingInvestedStock 
+      ? `${existingInvestedStock}, ${cardTitle}` 
+      : cardTitle; // If invested_stock exists, append the new card
+
+    const updatedInvestedAmount = existingInvestedAmount + parseFloat(amount_invested);
+
+    // Update the patient's record in the database
     await pool.query(
-      'INSERT INTO Investments (user_id, card_id, amount_invested) VALUES (?, ?, ?)',
-      [user_id, card_id, amount_invested]
+      'UPDATE Patients SET invested_stock = ?, invested_amount = ? WHERE id = ?',
+      [updatedInvestedStock, updatedInvestedAmount, userId]
     );
-    res.status(201).json({ message: 'Investment created successfully' });
+
+    res.status(201).json({ message: 'Investment added successfully' });
   } catch (err) {
-    console.error('Error creating investment:', err);
-    res.status(500).json({ error: 'Failed to create investment', details: err.message });
+    console.error('Error processing investment:', err);
+    res.status(500).json({ error: 'Failed to process investment', details: err.message });
   }
 });
 
+
+
 // Start the server
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });

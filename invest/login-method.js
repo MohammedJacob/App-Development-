@@ -24,6 +24,7 @@ const LoginMethod = () => {
             <Text style={styles.subtitle}>
               Please select your preferred method to continue setting up your account
             </Text>
+            
             <TouchableOpacity 
               style={styles.buttonEmail} 
               onPress={() => navigation.navigate('LoginMethodEmail')}
@@ -37,15 +38,22 @@ const LoginMethod = () => {
               <TouchableOpacity onPress={() => navigation.navigate('Onboarding')}>
                 <Image source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCvh-j7HsTHJ8ZckknAoiZMx9VcFmsFkv72g&s' }} style={styles.iconApple} />
               </TouchableOpacity>
+              
             </View>
             <Text style={styles.footerText}>
               If you are creating a new account, 
-              <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
+              <TouchableOpacity onPress={() => navigation.navigate('About Us')}>
                 <Text style={styles.link}> Terms & Conditions</Text>
               </TouchableOpacity> and 
               <TouchableOpacity onPress={() => navigation.navigate('Privacy Policy')}>
                 <Text style={styles.link}> Privacy Policy</Text>
               </TouchableOpacity> will apply.
+              </Text>
+              <Text>
+
+              <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+                <Text style={styles.link}> Coninue as guess</Text>
+              </TouchableOpacity> 
             </Text>
           </View>
         </View>
@@ -73,7 +81,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 20,
     width: '100%',
-    height:'50%',
+    height: '55%', // Increased height to move content up
     alignItems: 'center',
     position: 'relative',
   },
@@ -84,16 +92,15 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 18,
-    padding : 5,
+    padding: 5,
     color: '#888',
   },
   title: {
-    marginTop:40,
+    marginTop: 20, // Adjusted top margin
     color: '#333',
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: 'bold',
     marginBottom: 10,
-    fontWeight:'bold'
   },
   subtitle: {
     color: '#666',
@@ -110,7 +117,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-
   iconGoogle: {
     width: 50,
     height: 40,
@@ -125,15 +131,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  link: {
+    marginBottom: 20,
+  },
+  linkText: {
+    color: '#28a745',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
   iconContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginBottom: 30,
-    gap:80
-  },
-  icon: {
-    width: 36,
-    height: 36,
+    gap: 80,
   },
   footerText: {
     color: '#666',
@@ -142,6 +153,7 @@ const styles = StyleSheet.create({
   },
   link: {
     color: '#007bff',
+    textDecorationLine: 'underline',
   },
 });
 
