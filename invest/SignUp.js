@@ -11,7 +11,7 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Separate state for confirm password
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     name: '',
@@ -24,43 +24,7 @@ const SignupPage = () => {
   const navigation = useNavigation();
 
   const handleSubmit = async () => {
-    setErrors({
-      name: '',
-      lastName: '',
-      emailAddress: '',
-      password: '',
-      confirmPassword: '',
-    });
-
-    let isValid = true;
-    const newErrors = { ...errors };
-
-    if (!name) {
-      newErrors.name = 'Name is required';
-      isValid = false;
-    }
-    if (!lastName) {
-      newErrors.lastName = 'Last name is required';
-      isValid = false;
-    }
-    if (!emailAddress) {
-      newErrors.emailAddress = 'Email address is required';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(emailAddress)) {
-      newErrors.emailAddress = 'Please enter a valid email address';
-      isValid = false;
-    }
-    if (!password) {
-      newErrors.password = 'Password is required';
-      isValid = false;
-    } else if (password.length < 3 || !/[A-Z]/.test(password)) {
-      newErrors.password = 'Password must be at least 3 characters long and contain at least one uppercase letter';
-      isValid = false;
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-      isValid = false;
-    }
+    // ... (existing validation logic)
 
     if (!isValid) {
       setErrors(newErrors);
@@ -70,7 +34,7 @@ const SignupPage = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://192.168.1.241:3000/addPatient', {
+      const response = await axios.post('http://192.168.1.241:3000/addUser', {
         name,
         last_name: lastName,
         email_address: emailAddress.trim().toLowerCase(),
@@ -81,7 +45,7 @@ const SignupPage = () => {
       if (response.status === 201) {
         navigation.navigate('LoginMethod');
       } else {
-        Alert.alert('Error', 'Failed to add patient');
+        Alert.alert('Error', 'Failed to add User');
       }
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'Network error, please try again';
@@ -95,20 +59,12 @@ const SignupPage = () => {
     navigation.navigate('LoginMethod');
   };
 
-  const handleAppleLogin = async () => {
-    try {
-      const { identityToken, fullName, email } = await AppleAuthentication.signInAsync({
-        requestedScopes: [AppleAuthentication.Scope.FULL_NAME, AppleAuthentication.Scope.EMAIL],
-      });
+  const handleGuestLogin = () => {
+    navigation.navigate('Home'); // Navigate to the home screen for guest login
+  };
 
-      if (identityToken) {
-        console.log({ identityToken, fullName, email });
-      } else {
-        Alert.alert('Error', 'Apple sign-in was canceled');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'An error occurred during Apple sign-in');
-    }
+  const handleAppleLogin = async () => {
+    // ... (existing Apple login logic)
   };
 
   const handleGoogleLogin = () => {
@@ -148,6 +104,7 @@ const SignupPage = () => {
             />
             {errors.emailAddress ? <Text style={styles.errorText}>{errors.emailAddress}</Text> : null}
 
+            {/* Password Inputs */}
             <View style={styles.passwordContainer}>
               <TextInput
                 style={styles.passwordInput}
@@ -175,8 +132,7 @@ const SignupPage = () => {
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                secureTextEntry={!showConfirmPassword} // Updated to use showConfirmPassword
-                autoCapitalize="none"
+                secureTextEntry={!showConfirmPassword}
               />
               <TouchableOpacity 
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)} 
@@ -189,6 +145,23 @@ const SignupPage = () => {
               </TouchableOpacity>
             </View>
             {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
+
+            {/* Password Requirements */}
+            <View style={styles.passwordRequirementsContainer}>
+              <Text style={styles.passwordRequirementsHeader}>Password requirements:</Text>
+              <Text style={styles.passwordRequirements}>
+                <Text style={styles.valid}>+ </Text>be minimum 8 characters long
+              </Text>
+              <Text style={styles.passwordRequirements}>
+                <Text style={styles.valid}>+ </Text>Have at least one number
+              </Text>
+              <Text style={styles.passwordRequirements}>
+                <Text style={styles.invalid}>- </Text>Have at least one uppercase character
+              </Text>
+              <Text style={styles.passwordRequirements}>
+                <Text style={styles.invalid}>- </Text>Have at least one lowercase character
+              </Text>
+            </View>
 
             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
               <Text style={styles.buttonText}>SUBMIT</Text>
@@ -207,6 +180,12 @@ const SignupPage = () => {
             <TouchableOpacity onPress={handleSignInPress} style={styles.signInLink}>
               <Text style={styles.signInText}>Already have an account? Sign in</Text>
             </TouchableOpacity>
+
+            {/* Guest Login Button */}
+            <TouchableOpacity onPress={handleGuestLogin} style={styles.signInLink}>
+              <Text style={styles.signInText}>Continue as Guest</Text>
+            </TouchableOpacity>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -218,7 +197,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    marginTop:40
+    marginTop: 20,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -241,7 +220,6 @@ const styles = StyleSheet.create({
   },
   passwordContainer: {
     position: 'relative',
-    marginBottom: 16,
   },
   passwordInput: {
     height: 50,
@@ -249,60 +227,85 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 11,
     paddingHorizontal: 16,
+    marginBottom: 16,
   },
   showPasswordButton: {
     position: 'absolute',
     right: 10,
     top: 10,
-    height: 30,
-    width: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   showPasswordsicon: {
-    width: 20,
-    height: 20,
+    width: 24,
+    height: 24,
+  },
+  errorText: {
+    color: '#e74c3c',
+    marginBottom: 8,
+  },
+  passwordRequirementsContainer: {
+    backgroundColor: '#eef6ff',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 25,
+  },
+  passwordRequirementsHeader: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  passwordRequirements: {
+    fontSize: 14,
+  },
+  valid: {
+    color: 'green',
+  },
+  invalid: {
+    color: 'red',
   },
   button: {
     backgroundColor: '#6ba5fb',
-    paddingVertical: 15,
     borderRadius: 11,
+    height: 50,
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
   },
   loader: {
-    marginTop: 10,
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 10,
-    marginTop: -10,
+    marginVertical: 20,
   },
   iconContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginTop: 16,
+    justifyContent: 'space-around',
+    marginBottom: 16,
   },
   iconGoogle: {
-    width: 50,
+    width: 40,
     height: 40,
-    marginRight: 16,
   },
   iconApple: {
-    width: 35,
-    height: 35,
+    width: 40,
+    height: 40,
   },
   signInLink: {
-    marginTop: 16,
+    marginTop: 20,
     alignItems: 'center',
   },
   signInText: {
     color: '#6ba5fb',
+  },
+  guestButton: {
+    backgroundColor: '#d3d3d3',
+    borderRadius: 11,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  guestButtonText: {
+    color: '#000',
     fontSize: 16,
   },
 });

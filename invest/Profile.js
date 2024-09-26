@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
 import { useUser } from './UserContext'; // Import useUser hook
+import { useLayoutEffect } from 'react'; // Import useLayoutEffect
 
 const ProfileScreen = ({ navigation }) => {
   const { userData, setUserData } = useUser(); // Access user data and setter from context
@@ -12,6 +13,17 @@ const ProfileScreen = ({ navigation }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(`${userData.name || ''} ${userData.last_name || ''}`);
   const [profileImage, setProfileImage] = useState(userData.profile_image_url || '');
+
+  // Set up the button in the top-right corner to navigate to ChangePassword
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => navigation.navigate('ChangePassword')} style={styles.changePasswordButton}>
+          <Text style={styles.changePasswordButtonText}>Change Password</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   useEffect(() => {
     // Request permission to access media library
@@ -177,7 +189,7 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.infoValue}>{userData.email_address || 'guest@example.com'}</Text>
           </View>
           <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Joined date :</Text>
+            <Text style={styles.infoLabel}>Date Joined :</Text>
             <Text style={styles.infoValue}>{formatDate(userData.joined_date) || 'N/A'}</Text>
           </View>
         </View>
@@ -290,8 +302,16 @@ const styles = StyleSheet.create({
   spacer: {
     height: 60,
   },
+  changePasswordButton: {
+    marginRight: 10,
+    padding: 8,
+    backgroundColor: '#007AFF',
+    borderRadius: 5,
+  },
+  changePasswordButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
 });
 
 export default ProfileScreen;
-
-

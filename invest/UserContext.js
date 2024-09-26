@@ -7,7 +7,9 @@ const UserContext = createContext();
 export function UserProvider({ children }) {
   const [userData, setUserData] = useState({
     user_id: null, // Initialize with null or default value
-    email_address: null, // Assuming you still need this
+    email_address: null,
+    password  : null,
+    
     // Add other user details if needed
   });
 

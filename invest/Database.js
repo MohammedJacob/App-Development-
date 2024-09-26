@@ -25,10 +25,10 @@ export const getTableData = async (tableName) => {
   }
 };
 
-// Add a new patient to the database
-export const addPatient = async (firstName, lastName, email, password) => {
+// Add a new User to the database
+export const addUser = async (firstName, lastName, email, password) => {
   try {
-    const response = await axios.post(`${BASE_URL}/addPatient`, {
+    const response = await axios.post(`${BASE_URL}/addUser`, {
       name: firstName,
       last_name: lastName,
       email: email, // Include email in the payload
@@ -37,7 +37,7 @@ export const addPatient = async (firstName, lastName, email, password) => {
     });
     return response.data; // Returns the result of the insert operation
   } catch (error) {
-    console.error('Error adding patient:', error.message);
+    console.error('Error adding User:', error.message);
     throw error;
   }
 };
@@ -51,7 +51,7 @@ if (require.main === module) {
       console.log('Tables:', tables);
 
       if (tables.length > 0) {
-        const firstTable = tables[0].Tables_in_patientInfo;
+        const firstTable = tables[0].Tables_in_UserInfo;
         console.log(`Fetching data from table ${firstTable}...`);
         const data = await getTableData(firstTable);
         console.log(`Data from ${firstTable}:`, data);

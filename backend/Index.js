@@ -47,7 +47,7 @@ const fetchAllTablesAndData = async () => {
   try {
     const [tables] = await pool.query('SHOW TABLES');
     for (const table of tables) {
-      const tableName = table[`Tables_in_patientInfo`]; // Ensure this matches your actual table name format
+      const tableName = table[`Tables_in_Userinfo`]; // Ensure this matches your actual table name format
 
       // Describe the table schema
       const [schema] = await pool.query('DESCRIBE ??', [tableName]);
@@ -142,8 +142,8 @@ app.put('/api/cards/:id', async (req, res) => {
   }
 });
 
-// Endpoint to add a new patient
-app.post('/addPatient', async (req, res) => {
+// Endpoint to add a new User
+app.post('/addUser', async (req, res) => {
   const { name, last_name, email_address, password, joined_date } = req.body;
 
   if (!name || !last_name || !email_address || !password || !joined_date) {
@@ -151,23 +151,23 @@ app.post('/addPatient', async (req, res) => {
   }
 
   try {
-    const [existingPatients] = await pool.query('SELECT * FROM Patients WHERE email_address = ?', [email_address]);
+    const [existingUser] = await pool.query('SELECT * FROM User WHERE email_address = ?', [email_address]);
 
-    if (existingPatients.length > 0) {
+    if (existingUser.length > 0) {
       return res.status(400).json({ error: 'Email address already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await pool.query(
-      'INSERT INTO Patients (name, last_name, email_address, password, joined_date) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO User (name, last_name, email_address, password, joined_date) VALUES (?, ?, ?, ?, ?)',
       [name, last_name, email_address, hashedPassword, joined_date]
     );
 
-    res.status(201).json({ message: 'Patient added successfully' });
+    res.status(201).json({ message: 'User added successfully' });
   } catch (err) {
-    console.error('Error adding patient:', err);
-    res.status(500).json({ error: 'Failed to add patient', details: err.message });
+    console.error('Error adding User:', err);
+    res.status(500).json({ error: 'Failed to add User', details: err.message });
   }
 });
 
@@ -180,7 +180,7 @@ app.put('/updateProfile', async (req, res) => {
   }
 
   try {
-    const updateQuery = 'UPDATE Patients SET username = ?, profile_image = ? WHERE id = ?';
+    const updateQuery = 'UPDATE User SET username = ?, profile_image = ? WHERE id = ?';
     const values = [username, profileImage || null, id];
 
     const [result] = await pool.query(updateQuery, values);
@@ -207,7 +207,7 @@ app.post('/register', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query(
-      'INSERT INTO Users (username, hashed_password, joined_date) VALUES (?, ?, CURDATE())',
+      'INSERT INTO User (username, hashed_password, joined_date) VALUES (?, ?, CURDATE())',
       [username, hashedPassword]
     );
     res.status(201).json({ message: 'User registered successfully' });
@@ -226,7 +226,7 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query('SELECT hashed_password FROM Users WHERE username = ?', [username]);
+    const [rows] = await pool.query('SELECT hashed_password FROM User WHERE username = ?', [username]);
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -253,7 +253,7 @@ app.post('/loginWithEmail', async (req, res) => {
 
   try {
     const cleanedEmail = email.trim().toLowerCase();
-    const [rows] = await pool.query('SELECT * FROM Patients WHERE email_address = ?', [cleanedEmail]);
+    const [rows] = await pool.query('SELECT * FROM User WHERE email_address = ?', [cleanedEmail]);
 
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -274,52 +274,36 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 });
 
-app.post('/api/Patients', async (req, res) => {
-  const { email, card_id, amount_invested } = req.body;
+// Endpoint to add an investment
+app.post('/api/investments', async (req, res) => {
+  const { user_id, card_id, amount_invested, investment_date } = req.body;
 
-  if (!email || !card_id || amount_invested === undefined || isNaN(amount_invested) || parseFloat(amount_invested) <= 0) {
-    return res.status(400).json({ error: 'Valid email, card_id, and amount_invested are required' });
+  if (!user_id || !card_id || !amount_invested || !investment_date) {
+    return res.status(400).json({ error: 'User ID, card ID, amount invested, and investment date are required.' });
   }
 
   try {
-    // Fetch the patient by email
-    const [user] = await pool.query('SELECT id, invested_stock, invested_amount FROM Patients WHERE email_address = ?', [email]);
-
-    if (user.length === 0) {
-      return res.status(404).json({ error: 'Email not found' });
-    }
-
-    const userId = user[0].id;
-    const existingInvestedStock = user[0].invested_stock || ''; // Default to an empty string if null
-    const existingInvestedAmount = parseFloat(user[0].invested_amount) || 0; // Default to 0 if null
-
-    // Fetch the card title based on card_id
+    // Get the card title to be stored as invested_stock
     const [card] = await pool.query('SELECT title FROM Cards WHERE id = ?', [card_id]);
+
     if (card.length === 0) {
       return res.status(404).json({ error: 'Card not found' });
     }
 
-    const cardTitle = card[0].title;
+    const invested_stock = card[0].title;
 
-    // Update invested_stock and invested_amount
-    const updatedInvestedStock = existingInvestedStock 
-      ? `${existingInvestedStock}, ${cardTitle}` 
-      : cardTitle; // If invested_stock exists, append the new card
-
-    const updatedInvestedAmount = existingInvestedAmount + parseFloat(amount_invested);
-
-    // Update the patient's record in the database
-    await pool.query(
-      'UPDATE Patients SET invested_stock = ?, invested_amount = ? WHERE id = ?',
-      [updatedInvestedStock, updatedInvestedAmount, userId]
-    );
+    // Insert the investment, including invested_stock
+    await pool.query('INSERT INTO Investments (user_id, card_id, amount_invested, investment_date, invested_stock) VALUES (?, ?, ?, ?, ?)', 
+      [user_id, card_id, amount_invested, investment_date, invested_stock]);
 
     res.status(201).json({ message: 'Investment added successfully' });
-  } catch (err) {
-    console.error('Error processing investment:', err);
-    res.status(500).json({ error: 'Failed to process investment', details: err.message });
+  } catch (error) {
+    console.error('Error saving investment:', error);
+    res.status(500).json({ error: 'Failed to save investment', details: error.message });
   }
 });
+
+
 
 
 

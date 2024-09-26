@@ -29,6 +29,10 @@ const SettingsScreen = ({ navigation }) => {
 
         <TouchableOpacity style={styles.setting} onPress={() => handlePress('Privacy Policy')}>
           <Text style={styles.settingText}>Privacy</Text>
+
+          <TouchableOpacity style={styles.setting} onPress={() => handlePress('Privacy Policy')}>
+          <Text style={styles.settingText}>change password</Text>
+        </TouchableOpacity>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

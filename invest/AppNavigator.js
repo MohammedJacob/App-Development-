@@ -16,6 +16,11 @@ import DepositPage from './depositpage';
 import WithdrawPage from './Withdrawpage';
 import Onboarding from './Onboarding';
 import SignUp from './SignUp';
+import TandCScreen from './T&C';
+import TandCdetails from './T&Cdetails';
+import ChangePassword from './Changepassword';
+
+
 
 const Stack = createStackNavigator();
 
@@ -37,6 +42,9 @@ const AppNavigator = () => (
       <Stack.Screen name="Deposit" component={DepositPage} />
       <Stack.Screen name="Withdraw" component={WithdrawPage} />
       <Stack.Screen name="Onboarding" component={Onboarding} />
+      <Stack.Screen name="TandC" component={TandCScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="TandCdetails" component={TandCdetails} options={{ headerShown: false }} />
+      <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
     </Stack.Navigator>
   </NavigationContainer>
 );

@@ -50,10 +50,6 @@ const LoginMethod = () => {
               </TouchableOpacity> will apply.
               </Text>
               <Text>
-
-              <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-                <Text style={styles.link}> Coninue as guess</Text>
-              </TouchableOpacity> 
             </Text>
           </View>
         </View>

@@ -29,6 +29,9 @@ const DetailPage = ({ route, navigation }) => {
   const { card } = route.params;
   const { userData } = useUser(); // Access user data from context
 
+  // Log user data to verify if user_id is set correctly
+  console.log('User Data:', userData);
+
   // State Management
   const [cardDetails, setCardDetails] = useState({
     numberOnCard: '',
@@ -37,7 +40,6 @@ const DetailPage = ({ route, navigation }) => {
     expiryDate: '',
     investmentAmount: '',
   });
-  const [investmentConfirmation, setInvestmentConfirmation] = useState('');
 
   // Derived values
   const currentPrice = formatPrice(card.price);
@@ -81,85 +83,88 @@ const DetailPage = ({ route, navigation }) => {
     }
   };
 
+  // Function to navigate to Home page
+  const navigateToHome = () => {
+    navigation.navigate('Home');
+  };
+
   const handleInvest = async () => {
     const { numberOnCard, nameOnCard, cvv, expiryDate, investmentAmount } = cardDetails;
-
+  
     if (!numberOnCard || !nameOnCard || !cvv || !expiryDate || !investmentAmount) {
       Alert.alert('Input Error', 'Please fill out all fields.');
       return;
     }
-
+  
+    if (!userData || !userData.id) {
+      Alert.alert('Authentication Error', 'User is not authenticated. Please log in.');
+      return;
+    }
+  
     try {
-      // Calculate the new price of the card after the investment
-      const newPrice = (
-        parseFloat(card.price.replace(/[^0-9.-]+/g, '')) +
-        parseFloat(investmentAmount.replace(/,/g, ''))
-      ).toFixed(2);
-
-      // Update the card price
-      const response = await fetch(`http://192.168.1.241:3000/api/cards/${card.id}`, {
+      const newPrice = (parseFloat(card.price.replace(/[^0-9.-]+/g, '')) + parseFloat(investmentAmount.replace(/,/g, ''))).toFixed(2);
+  
+      const updateResponse = await fetch(`http://192.168.1.241:3000/api/cards/${card.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ price: newPrice }),
       });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-      // Save investment details to the Patients table
+  
+      if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
+  
       const investmentDetails = {
-        email: userData.email_address,
+        user_id: userData.id,
         card_id: card.id,
         amount_invested: parseFloat(investmentAmount.replace(/,/g, '')),
+        investment_date: new Date().toISOString(),
+        invested_stock: card.title,  // Add card title as invested_stock
       };
-
-      const patientResponse = await fetch(`http://192.168.1.241:3000/api/Patients`, {
+  
+      const investmentResponse = await fetch(`http://192.168.1.241:3000/api/investments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(investmentDetails),
       });
-
-      if (!patientResponse.ok) throw new Error(`HTTP error! status: ${patientResponse.status}`);
-
+  
+      if (!investmentResponse.ok) throw new Error(`HTTP error! status: ${investmentResponse.status}`);
+  
       Alert.alert('Success', 'Investment saved successfully!');
-      setInvestmentConfirmation(`Invested in "${card.title}" with amount: $${investmentAmount}`);
+      navigateToHome();
     } catch (error) {
       console.error('Error:', error);
       Alert.alert('Error', 'Failed to save the investment. Please try again later.');
     }
   };
+  
+
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        {/* Yield Information */}
+        <View style={styles.yieldInfoContainer}>
+          <Text style={styles.cardValue}>{currentPrice}</Text>
+          <Text style={styles.cardTarget}>Target: {targetPrice}</Text>
+          <Text style={styles.cardTarget}>Remaining: {formatPrice(remainingAmount.toFixed(2))}</Text>
+        </View>
+
+        {/* Progress Bar */}
+        <View style={styles.progressBarContainer}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progress, { width: `${fundedPercentage}%` }]} />
+          </View>
+          <Text style={styles.progressPercentage}>{`${fundedPercentage.toFixed(0)}% Funded`}</Text>
+        </View>
+
+        {/* Card Section */}
         <PaperCard style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderContent}>
-              <Text style={styles.cardTitle}>{card.title}</Text>
-              <Text style={styles.cardPrice}>${currentPrice}</Text>
-              <Text style={styles.cardTarget}>Target: ${targetPrice}</Text>
-            </View>
-            <Image source={{ uri: card.image }} style={styles.image} />
-          </View>
-          <View style={styles.progressBarContainer}>
-            <View style={[styles.progressBar, { width: `${fundedPercentage}%` }]} />
-          </View>
-          <PaperCard.Content style={styles.cardContent}>
-            <View style={styles.cardRow}>
-              {['return_value', 'investment', 'yield'].map((key) => (
-                <React.Fragment key={key}>
-                  <View style={styles.cardColumn}>
-                    <Text style={styles.cardValue}>{card[key] ? card[key].split(': ')[1] : 'N/A'}</Text>
-                    <Text style={styles.cardLabel}>{key.replace(/^\w/, (c) => c.toUpperCase())}</Text>
-                  </View>
-                  {key !== 'yield' && <View style={styles.verticalDivider} />}
-                </React.Fragment>
-              ))}
-            </View>
-          </PaperCard.Content>
+          <Image source={{ uri: card.image }} style={styles.image} />
+          <Text style={styles.cardTitle}>{card.title}</Text>
         </PaperCard>
 
-        {/* Input Section */}
         <View style={styles.inputSection}>
           <Text style={styles.inputLabel}>Enter card details:</Text>
           <TextInput
@@ -207,133 +212,106 @@ const DetailPage = ({ route, navigation }) => {
         <TouchableOpacity
           style={[
             styles.investButton,
-            (!cardDetails.numberOnCard || !cardDetails.nameOnCard || !cardDetails.cvv || !cardDetails.expiryDate || !cardDetails.investmentAmount) && { backgroundColor: '#ccc' },
+            (!cardDetails.numberOnCard || !cardDetails.nameOnCard || !cardDetails.cvv || !cardDetails.expiryDate || !cardDetails.investmentAmount) && { backgroundColor: 'gray' }
           ]}
           onPress={handleInvest}
           disabled={!cardDetails.numberOnCard || !cardDetails.nameOnCard || !cardDetails.cvv || !cardDetails.expiryDate || !cardDetails.investmentAmount}
         >
           <Text style={styles.investButtonText}>Invest</Text>
         </TouchableOpacity>
-
-        {investmentConfirmation ? (
-          <Text style={styles.confirmationText}>{investmentConfirmation}</Text>
-        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-// Styles (Consider separating this into its own file)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
   },
   scrollViewContent: {
-    padding: 16,
+    paddingBottom: 20,
+  },
+  yieldInfoContainer: {
+    marginBottom: 20,
+  },
+  cardValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  cardTarget: {
+    fontSize: 16,
+    color: '#757575',
+  },
+  progressBarContainer: {
+    marginVertical: 20,
+  },
+  progressBar: {
+    height: 20,
+    width: '100%',
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  progress: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+  },
+  progressPercentage: {
+    textAlign: 'right',
+    marginTop: 5,
   },
   card: {
-    marginBottom: 16,
+    marginBottom: 20,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    elevation: 3,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  cardHeaderContent: {
-    flex: 1,
+  image: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-  },
-  cardPrice: {
-    fontSize: 18,
-    color: 'green',
-  },
-  cardTarget: {
-    fontSize: 16,
-    color: '#777',
-  },
-  image: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-  },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: '#ccc',
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginVertical: 8,
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: 'green',
-  },
-  cardContent: {
-    padding: 10,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  cardColumn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  cardValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  cardLabel: {
-    fontSize: 12,
-    color: '#777',
-  },
-  verticalDivider: {
-    width: 1,
-    backgroundColor: '#ccc',
-    marginHorizontal: 8,
+    marginTop: 10,
   },
   inputSection: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 5,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
+    borderColor: '#cccccc',
+    borderRadius: 5,
     padding: 10,
-    marginBottom: 12,
+    marginBottom: 10,
+    backgroundColor: '#ffffff',
   },
   rowContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   halfInput: {
-    flex: 1,
-    marginHorizontal: 5,
+    flex: 0.48,
   },
   investButton: {
-    backgroundColor: 'green',
+    backgroundColor: '#4CAF50',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 5,
     alignItems: 'center',
-    marginBottom: 16,
   },
   investButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  confirmationText: {
-    color: 'green',
-    fontSize: 16,
-    textAlign: 'center',
   },
 });
 

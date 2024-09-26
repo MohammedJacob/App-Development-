@@ -19,25 +19,30 @@ export default function LoginMethodEmail({ navigation }) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-  
+
     if (!password) {
       Alert.alert('Invalid Password', 'Password is required.');
       return;
     }
-  
+
     try {
       const response = await axios.post('http://192.168.1.241:3000/loginWithEmail', { email, password });
+
+      // Log the response for debugging
+      console.log('Login response:', response.data);
+
       if (response.data.error) {
         Alert.alert('Error', response.data.error);
       } else {
         // Store user data in context
         setUserData(response.data.userData);
         // Navigate to Home screen and pass email address
-        navigation.navigate('Home', { email });
+        navigation.navigate('TandC', { email });
       }
     } catch (error) {
-      Alert.prompt('API request error:', error.response?.data || error.message);
-      Alert.alert('Error', 'Email or passowrd is incorrect please try again .');
+      // Log the error for debugging
+      console.error('API request error:', error);
+      Alert.alert('Error', error.response?.data?.error || 'Email or password is incorrect, please try again.');
     }
   };
 
