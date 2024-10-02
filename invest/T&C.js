@@ -8,7 +8,7 @@ const TandCScreen = () => {
   const navigation = useNavigation();
 
   const handleAccept = () => {
-    navigation.navigate('Home'); // Navigating to Home Screen on Accept button click
+    navigation.navigate('Onboarding'); // Navigating to Home Screen on Accept button click
   };
 
   const handleTermsPress = () => {

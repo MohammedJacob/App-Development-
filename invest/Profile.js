@@ -4,6 +4,7 @@ import FooterTabs from './components/footer'; // Assuming you have a FooterTabs 
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
+import SettingsImage from './assets/settings.png';
 import { useUser } from './UserContext'; // Import useUser hook
 import { useLayoutEffect } from 'react'; // Import useLayoutEffect
 
@@ -14,12 +15,15 @@ const ProfileScreen = ({ navigation }) => {
   const [username, setUsername] = useState(`${userData.name || ''} ${userData.last_name || ''}`);
   const [profileImage, setProfileImage] = useState(userData.profile_image_url || '');
 
-  // Set up the button in the top-right corner to navigate to ChangePassword
+  // Set up the settings image in the top-right corner
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={() => navigation.navigate('ChangePassword')} style={styles.changePasswordButton}>
-          <Text style={styles.changePasswordButtonText}>Change Password</Text>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Settings')} 
+          style={styles.iconButton}
+        >
+          <Image source={SettingsImage} style={styles.icon} />
         </TouchableOpacity>
       ),
     });
@@ -36,6 +40,12 @@ const ProfileScreen = ({ navigation }) => {
   }, []);
 
   const handleEditPress = () => {
+    // Check if the user is a guest
+    if (!userData.id) { // Assuming userData.id is undefined for guests
+      Alert.alert('Login Required', 'Please log in to edit your profile.');
+      return;
+    }
+
     // Toggle editing mode
     setIsEditing(!isEditing);
   };
@@ -81,6 +91,12 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleImagePick = async () => {
+    // Check if the user is a guest
+    if (!userData.id) { // Assuming userData.id is undefined for guests
+      Alert.alert('Login Required', 'Please log in to customize your profile picture.');
+      return;
+    }
+
     try {
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -168,7 +184,10 @@ const ProfileScreen = ({ navigation }) => {
           ) : (
             <Text style={styles.username}>{username}</Text>
           )}
-          <TouchableOpacity style={styles.editButton} onPress={isEditing ? handleSavePress : handleEditPress}>
+          <TouchableOpacity 
+            style={[styles.editButton, !userData.id && styles.disabledButton]} // Change button style if guest
+            onPress={handleEditPress}
+          >
             <Text style={styles.editButtonText}>{isEditing ? 'Save' : 'Edit'}</Text>
           </TouchableOpacity>
           <Text style={styles.email}>{userData.email_address || 'guest@example.com'}</Text>
@@ -178,26 +197,29 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.infoTitle}>Personal Information</Text>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>First Name:</Text>
-            <Text style={styles.infoValue}>{userData.name || 'N/A'}</Text>
+            <Text style={styles.infoValue}>{userData.name || 'User'}</Text>
           </View>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Last Name:</Text>
-            <Text style={styles.infoValue}>{userData.last_name || 'N/A'}</Text>
+            <Text style={styles.infoValue}>{userData.last_name || 'doe'}</Text>
           </View>
           <View style={styles.infoItem}>
             <Text style={styles.infoLabel}>Email Address:</Text>
             <Text style={styles.infoValue}>{userData.email_address || 'guest@example.com'}</Text>
           </View>
           <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Date Joined :</Text>
+            <Text style={styles.infoLabel}>Date Joined:</Text>
             <Text style={styles.infoValue}>{formatDate(userData.joined_date) || 'N/A'}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Password:</Text>
+            <Text style={styles.infoValue}>{formatDate(userData.password) || 'N/A'}</Text>
           </View>
         </View>
 
         <View style={styles.spacer} />
       </ScrollView>
-
-      <FooterTabs navigation={navigation} />
+      <FooterTabs /> 
     </SafeAreaView>
   );
 };
@@ -208,10 +230,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 60,
+    paddingBottom: 20,
   },
   profileContainer: {
     alignItems: 'center',
@@ -237,6 +256,16 @@ const styles = StyleSheet.create({
     height: '120%',
     borderRadius: 10,
   },
+  iconContainer: {
+    flexDirection: 'row',
+  },
+  iconButton: {
+    marginRight: 16,
+  },
+  icon: {
+    width: 24,
+    height: 24,
+  },
   username: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -249,11 +278,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   editButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#007AFF', // Default button color for logged-in users
     borderRadius: 5,
     paddingVertical: 8,
     paddingHorizontal: 16,
     marginVertical: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#B0B0B0', // Grey background for guest users
   },
   editButtonText: {
     color: '#FFFFFF',
@@ -301,16 +333,6 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: 60,
-  },
-  changePasswordButton: {
-    marginRight: 10,
-    padding: 8,
-    backgroundColor: '#007AFF',
-    borderRadius: 5,
-  },
-  changePasswordButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
   },
 });
 

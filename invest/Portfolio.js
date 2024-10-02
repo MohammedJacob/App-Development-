@@ -1,85 +1,123 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, SafeAreaView, ScrollView, Dimensions } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
+import React, { useEffect, useState } from 'react';
+import {
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { useUser } from './UserContext'; // Import useUser hook
 import Footer from './components/footer'; // Ensure the correct import path
+import { LineChart } from 'react-native-chart-kit'; // Importing LineChart from chart kit
 
-const PortfolioScreen = ({ navigation, route }) => {
-  const { userData } = useUser(); // Access user data
-  const [investedStock, setInvestedStock] = useState(userData.invested_stock || '');
-  const [portfolioValue, setPortfolioValue] = useState(0);
-
-  // Split investedStock string by comma and map through each stock
-  const stockArray = investedStock ? investedStock.split(',') : [];
+const PortfolioScreen = ({ navigation }) => {
+  const { userData } = useUser();
+  const [portfolio, setPortfolio] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [netWorth, setNetWorth] = useState(0);
 
   useEffect(() => {
-    // Calculate the total value of the portfolio by summing up the stock amounts
-    let totalValue = 0;
-    stockArray.forEach(stock => {
-      const [_, amount] = stock.split(':');
-      totalValue += parseFloat(amount);
-    });
-    setPortfolioValue(totalValue);
-  }, [stockArray]);
+    const fetchPortfolio = async () => {
+      if (userData && userData.id) {
+        try {
+          const response = await fetch(`http://192.168.1.241:3000/api/portfolio/${userData.id}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch portfolio data');
+          }
+          const data = await response.json();
+          
+          const portfolioData = Array.isArray(data) && data.length > 0 ? data[0] : [];
+          setPortfolio(portfolioData);
+
+          const totalNetWorth = portfolioData.reduce((total, item) => {
+            const amount = parseFloat(item.amount_invested) || 0; 
+            return total + amount;
+          }, 0);
+          setNetWorth(totalNetWorth);
+
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    fetchPortfolio();
+  }, [userData]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.portfolioValueText}>Your portfolio is worth: ${portfolioValue}</Text>
-        
-        <View style={styles.graphContainer}>
-          <LineChart
-            data={{
-              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-              datasets: [
-                {
-                  data: [20, 45, 28, 80, 99, 43],
-                  strokeWidth: 3,
-                  color: (opacity = 1) => `rgba(0, 150, 136, ${opacity})`, // Line color - teal
-                },
-              ],
-            }}
-            width={Dimensions.get('window').width * 0.9} // Adjust width to be 90% of the screen width
-            height={240} // Slightly increase height for better visibility
-            chartConfig={{
-              backgroundColor: '#e0f7fa', // Light green background
-              backgroundGradientFrom: '#e0f7fa',
-              backgroundGradientTo: '#e0f7fa',
-              color: (opacity = 1) => `rgba(0, 150, 136, ${opacity})`, // Teal color for line and text
-              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              fillShadowGradient: '#00bfa5', // Teal fill under the line
-              fillShadowGradientOpacity: 0.2,
-              decimalPlaces: 2, // Adjust if necessary
-              propsForDots: {
-                r: "5", // Larger dots
-                strokeWidth: "2",
-                stroke: "#004d40", // Darker teal border for dots
-              },
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-          />
-        </View>
+      <StatusBar barStyle="dark-content" />
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.contentContainer}>
+          {loading ? (
+            <Text>Loading...</Text>
+          ) : userData && userData.id ? (
+            <View style={styles.userContent}>
+              {/* Display Net Worth */}
+              <Text style={styles.netWorthText}>Net Worth: ${netWorth.toFixed(2)}</Text>
 
-        <View style={styles.profileContainer}>
-          {stockArray.length > 0 ? (
-            stockArray.map((stock, index) => {
-              const [title, amount] = stock.split(':');
-              return (
-                <View key={index} style={styles.card}>
-                  <Text style={styles.stockTitle}>{title}</Text>
-                  <Text style={styles.stockAmount}>Invested Amount: ${amount}</Text>
+              {/* Simplified Graph Component */}
+              <LineChart
+                data={{
+                  datasets: [
+                    {
+                      data: portfolio.map(item => parseFloat(item.amount_invested) || 0),
+                    },
+                  ],
+                }}
+                width={340} // from react-native
+                height={220}
+                withDots={false} // No dots on the line
+                withInnerLines={false} // Remove inner grid lines
+                withHorizontalLabels={false} // Remove Y-axis labels
+                withVerticalLabels={false} // Remove X-axis labels
+                chartConfig={{
+                  backgroundColor: '#ffffff',
+                  backgroundGradientFrom: '#ffffff',
+                  backgroundGradientTo: '#ffffff',
+                  color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`, // Line color
+                  style: {
+                    borderRadius: 16,
+                  },
+                }}
+                style={{
+                  marginVertical: 8,
+                  borderRadius: 16,
+                }}
+              />
+
+              {/* Investment Cards */}
+              {portfolio.map((item) => (
+                <View key={item.id} style={styles.investmentCard}>
+                  <Text style={styles.itemText}>{item.invested_stock}</Text>
+                  <Text style={styles.itemText}>${item.amount_invested}</Text>
                 </View>
-              );
-            })
+              ))}
+            </View>
           ) : (
-            <Text style={styles.noStock}>No stocks invested</Text>
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorMessage}>Guest accounts cannot access this page.</Text>
+              <Text style={styles.promptMessage}>Please log in to access full features.</Text>
+              <TouchableOpacity
+                style={styles.signUpButton}
+                onPress={() => navigation.navigate('SignUp')} // Navigate to the signup page
+              >
+                <Text style={styles.signUpButtonText}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
           )}
+          {error && <Text style={styles.errorMessage}>{error}</Text>}
         </View>
       </ScrollView>
+
+      {/* Footer Navigation */}
       <Footer navigation={navigation} />
     </SafeAreaView>
   );
@@ -88,55 +126,68 @@ const PortfolioScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    padding: 16,
+    backgroundColor: '#f9f9f9',
   },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 10, // Adjusted to move content up
-    paddingBottom: 60,
+  scrollViewContent: {
+    paddingBottom: 20,
   },
-  portfolioValueText: {
-    fontSize: 22, // Slightly larger text for visibility
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 15, // Adjusted margin
-  },
-  graphContainer: {
+  contentContainer: {
     alignItems: 'center',
-    marginBottom: 20, // Increased margin for separation
   },
-  profileContainer: {
-    alignItems: 'center', // Center-align the cards
-    marginVertical: 15, // Adjusted spacing between cards and graph
-    padding: 2,
+  userContent: {
+    alignItems: 'center',
+    width: '100%',
   },
-  card: {
-    backgroundColor: '#fff',
-    padding: 20,
-    marginVertical: 10,
-    borderRadius: 10,
-    width: '95%', // Adjust the card width to be slightly wider
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  stockTitle: {
-    fontSize: 18,
+  netWorthText: {
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginVertical: 10,
+    color: '#28a745',
   },
-  stockAmount: {
+  investmentCard: {
+    padding: 16,
+    marginVertical: 5,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    elevation: 2,
+    width: '100%',
+  },
+  itemText: {
     fontSize: 16,
     color: '#555',
   },
-  noStock: {
-    fontSize: 16,
-    color: '#999',
+  errorContainer: {
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    elevation: 2,
+    width: '90%',
+  },
+  errorMessage: {
+    fontSize: 20,
+    color: '#000',
+    fontWeight: 'bold',
     textAlign: 'center',
+  },
+  promptMessage: {
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  signUpButton: {
+    backgroundColor: '#007bff',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginTop: 15,
+  },
+  signUpButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

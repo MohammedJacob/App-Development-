@@ -36,7 +36,6 @@ const fetchCards = async () => {
   }
 };
 
-// Card component
 const Card = ({ card, onPress }) => {
   const currentPrice = formatPrice(card.price);
   const targetPrice = formatPrice(card.targetPrice);
@@ -72,20 +71,20 @@ const Card = ({ card, onPress }) => {
         </View>
 
         <PaperCard.Content style={styles.cardContent}>
-          {/* Updated Layout - Stacked items */}
-          <View style={styles.cardStackedRow}>
-            <Text style={styles.cardValue}>{card.return_value ? card.return_value.split(': ')[1] : 'N/A'}</Text>
-            <Text style={styles.cardLabel}>Return Value</Text>
+          {/* Formatted investment details */}
+          <View style={styles.investmentDetail}>
+            <Text style={styles.label}>5 year total return</Text>
+            <Text style={styles.value}>{card.return_value ? card.return_value.split(': ')[1] : 'N/A'}</Text>
           </View>
 
-          <View style={styles.cardStackedRow}>
-            <Text style={styles.cardValue}>{card.investment ? card.investment.split(': ')[1] : 'N/A'}</Text>
-            <Text style={styles.cardLabel}>Investment</Text>
+          <View style={styles.investmentDetail}>
+            <Text style={styles.label}>Yearly investment return</Text>
+            <Text style={styles.value}>{card.investment ? card.investment.split(': ')[1] : 'N/A'}</Text>
           </View>
 
-          <View style={styles.cardStackedRow}>
-            <Text style={styles.cardValue}>{card.yield ? card.yield.split(': ')[1] : 'N/A'}</Text>
-            <Text style={styles.cardLabel}>Yield</Text>
+          <View style={styles.investmentDetail}>
+            <Text style={styles.label}>Projected net yield</Text>
+            <Text style={styles.value}>{card.yield ? card.yield.split(': ')[1] : 'N/A'}</Text>
           </View>
 
           {/* Left-aligned button */}
@@ -256,6 +255,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#34c659',
   },
+
+  investmentDetail: {
+    flexDirection: 'row',
+    justifyContent: 'space-between', 
+    marginBottom: 8, // spacing between rows
+  },
+  label: {
+    fontSize: 14,
+    color: '#777', // lighter color for the label
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000', // bold and dark color for the value
+  },
+  detailButtonLeft: {
+    marginTop: 16,
+    backgroundColor: '#34c659',
+    alignSelf: 'flex-start', // Align button to the left
+  },
+
   cardTarget: {
     fontSize: 14,
     color: '#888',

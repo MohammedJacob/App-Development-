@@ -60,7 +60,20 @@ const SignupPage = () => {
   };
 
   const handleGuestLogin = () => {
-    navigation.navigate('Home'); // Navigate to the home screen for guest login
+    Alert.alert(
+      'Guest Login',
+      'Some features may be restricted if you don’t sign in.',
+      [
+        {
+          text: 'Continue as Guest',
+          onPress: () => navigation.navigate('Home'), // Navigate to the home screen for guest login
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel', // Adds a cancel button
+        },
+      ]
+    );
   };
 
   const handleAppleLogin = async () => {
@@ -197,7 +210,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    marginTop: 20,
+    marginTop: 15,
   },
   scrollContainer: {
     flexGrow: 1,
@@ -279,7 +292,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 16,
+    marginBottom: 5,
   },
   iconGoogle: {
     width: 40,

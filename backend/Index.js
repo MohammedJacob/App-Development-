@@ -142,6 +142,55 @@ app.put('/api/cards/:id', async (req, res) => {
   }
 });
 
+// Endpoint to change a user's password
+app.put('/changePassword', async (req, res) => {
+  const { user_id, currentPassword, newPassword } = req.body;
+
+  // Validate the input
+  if (!user_id || !currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'User ID, current password, and new password are required.' });
+  }
+
+  try {
+    // Fetch the user from the database
+    const [user] = await pool.query('SELECT password FROM User WHERE id = ?', [user_id]);
+
+    // Check if the user exists
+    if (user.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    const hashedCurrentPassword = user[0].password;
+
+    // Compare the current password with the one in the database
+    const isMatch = await bcrypt.compare(currentPassword, hashedCurrentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Current password is incorrect.' });
+    }
+
+    // Verify that the new password is different from the current one
+    const isSameAsCurrent = await bcrypt.compare(newPassword, hashedCurrentPassword);
+    if (isSameAsCurrent) {
+      return res.status(400).json({ error: 'New password cannot be the same as the current password.' });
+    }
+
+    // Hash the new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password in the database
+    await pool.query('UPDATE User SET password = ? WHERE id = ?', [hashedNewPassword, user_id]);
+
+    res.status(200).json({ message: 'Password changed successfully.' });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ error: 'Failed to change password', details: error.message });
+  }
+});
+
+
+
+
+
 // Endpoint to add a new User
 app.post('/addUser', async (req, res) => {
   const { name, last_name, email_address, password, joined_date } = req.body;
@@ -274,6 +323,29 @@ app.post('/loginWithEmail', async (req, res) => {
   }
 });
 
+// Example route to get portfolio for a user
+app.get('/api/portfolio/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Query to fetch investments for a specific user
+    const portfolio = await pool.query(
+      `SELECT Investments.*, Cards.title, Cards.price, Cards.targetPrice, Cards.image, 
+      Cards.return_value, Cards.investment, Cards.yield 
+      FROM Investments 
+      JOIN Cards ON Investments.card_id = Cards.id 
+      WHERE Investments.user_id = ?`, 
+      [userId]
+    );
+    
+    res.json(portfolio);  // Send the fetched portfolio data as JSON
+  } catch (error) {
+    console.error("Error fetching portfolio:", error);
+    res.status(500).json({ error: "Error fetching portfolio" });
+  }
+});
+
+
 // Endpoint to add an investment
 app.post('/api/investments', async (req, res) => {
   const { user_id, card_id, amount_invested, investment_date } = req.body;
@@ -303,11 +375,7 @@ app.post('/api/investments', async (req, res) => {
   }
 });
 
-
-
-
-
-// Start the server
+// Start the serverr
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
