@@ -19,7 +19,7 @@ const Onboarding = () => {
           </Text>
           <TouchableOpacity 
             style={styles.button} 
-            onPress={() => navigation.navigate('Home')}
+            onPress={() => navigation.navigate('Welcome')}
           >
             <Text style={styles.buttonText}>Get started</Text>
           </TouchableOpacity>

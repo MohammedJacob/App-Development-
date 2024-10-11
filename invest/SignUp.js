@@ -66,7 +66,7 @@ const SignupPage = () => {
       [
         {
           text: 'Continue as Guest',
-          onPress: () => navigation.navigate('Home'), // Navigate to the home screen for guest login
+          onPress: () => navigation.navigate('Welcome'), // Navigate to the home screen for guest login
         },
         {
           text: 'Cancel',
@@ -77,7 +77,7 @@ const SignupPage = () => {
   };
 
   const handleAppleLogin = async () => {
-    // ... (existing Apple login logic)
+    
   };
 
   const handleGoogleLogin = () => {

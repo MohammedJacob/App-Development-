@@ -19,6 +19,7 @@ import SignUp from './SignUp';
 import TandCScreen from './T&C';
 import TandCdetails from './T&Cdetails';
 import ChangePassword from './Changepassword';
+import Welcome from './Welcome';
 
 
 
@@ -29,19 +30,20 @@ const AppNavigator = () => (
     <Stack.Navigator initialRouteName="SignUp">
       <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Details" component={DetailPage} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Details" component={DetailPage} options={{ headerShown: false }} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="LoginMethod" component={LoginMethod} options={{ headerShown: false }} />
       <Stack.Screen name="LoginMethodEmail" component={LoginMethodEmail} options={{ headerShown: false }} />
-      <Stack.Screen name="About Us" component={AboutUsScreen} />
-      <Stack.Screen name="Payment" component={PaymentScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="Wallet" component={WalletScreen} />
-      <Stack.Screen name="Privacy Policy" component={PrivacyPolicyScreen} />
-      <Stack.Screen name="Portfolio" component={PortfolioScreen} />
-      <Stack.Screen name="Deposit" component={DepositPage} />
-      <Stack.Screen name="Withdraw" component={WithdrawPage} />
-      <Stack.Screen name="Onboarding" component={Onboarding} />
+      <Stack.Screen name="About Us" component={AboutUsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Wallet" component={WalletScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Privacy Policy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Portfolio" component={PortfolioScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Deposit" component={DepositPage} options={{ headerShown: false }} />
+      <Stack.Screen name="Withdraw" component={WithdrawPage} options={{ headerShown: false }} />
+      <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
+      <Stack.Screen name="Onboarding" component={Onboarding} options={{ headerShown: false }} />
       <Stack.Screen name="TandC" component={TandCScreen} options={{ headerShown: false }} />
       <Stack.Screen name="TandCdetails" component={TandCdetails} options={{ headerShown: false }} />
       <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />

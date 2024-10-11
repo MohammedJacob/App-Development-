@@ -77,7 +77,7 @@ export default function LoginMethodEmail({ navigation }) {
       </View>
       <TouchableOpacity style={styles.button} onPress={handleContinue}>
         <Text style={styles.buttonText}>Continue</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> 
     </SafeAreaView>
   );
 }

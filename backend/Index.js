@@ -3,6 +3,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const pool = require('./database'); // Import your MySQL connection pool
+const WebSocket = require('ws'); // WebSocket library
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 const app = express();
 const port = 3000;
@@ -10,6 +13,11 @@ const port = 3000;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+
+const wss = new WebSocket.Server({ noServer: true });
+
+// Store WebSocket connections
+const clients = new Set();
 
 // Function to format and log table schema
 const formatTableSchema = (tableName, schema) => {
@@ -22,6 +30,7 @@ const formatTableSchema = (tableName, schema) => {
   });
   console.log('+-------------+--------------+------+-----+---------+----------------+');
 };
+
 
 // Function to format and log table data
 const formatTableData = (tableName, data) => {
@@ -42,25 +51,44 @@ const formatTableData = (tableName, data) => {
   console.log(`${data.length} row${data.length > 1 ? 's' : ''} in set (0.01 sec)`);
 };
 
+const broadcastPortfolioUpdate = (portfolioData) => {
+  clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify({ type: 'portfolioUpdate', data: portfolioData }));
+    }
+  });
+};
+
+// Handle WebSocket connections
+wss.on('connection', (ws) => {
+  clients.add(ws);
+
+  ws.on('close', () => {
+    clients.delete(ws);
+  });
+});
+
+
 // Function to describe and fetch data from each table
 const fetchAllTablesAndData = async () => {
   try {
     const [tables] = await pool.query('SHOW TABLES');
     for (const table of tables) {
-      const tableName = table[`Tables_in_Userinfo`]; // Ensure this matches your actual table name format
+      const tableName = Object.values(table)[0]; // Extract table name from object
 
       // Describe the table schema
       const [schema] = await pool.query('DESCRIBE ??', [tableName]);
-      formatTableSchema(tableName, schema);
+      formatTableSchema(tableName, schema); // Call to log the table schema
 
       // Fetch and log data from the table
       const [rows] = await pool.query('SELECT * FROM ??', [tableName]);
-      formatTableData(tableName, rows);
+      formatTableData(tableName, rows); // Call to log the table data
     }
   } catch (err) {
     console.error('Error fetching tables or data:', err);
   }
 };
+
 
 // Connect to the database
 pool.getConnection()
@@ -71,7 +99,6 @@ pool.getConnection()
   .catch(err => {
     console.error('Error connecting to the database:', err);
   });
-
 // Endpoint to list all tables in the database
 app.get('/tables', async (req, res) => {
   try {
@@ -141,6 +168,21 @@ app.put('/api/cards/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to update card price', details: err.message });
   }
 });
+
+// Endpoint to fetch card data
+app.get('/api/cards', async (req, res) => {
+  try {
+    const [results] = await pool.query('SELECT id, title, price, targetPrice, image, description, Files FROM Cards');
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No card data found' });
+    }
+    res.json(results);
+  } catch (err) {
+    console.error('Error fetching cards:', err);
+    res.status(500).json({ error: 'Failed to fetch card data', details: err.message });
+  }
+});
+
 
 // Endpoint to change a user's password
 app.put('/changePassword', async (req, res) => {
@@ -221,29 +263,57 @@ app.post('/addUser', async (req, res) => {
 });
 
 // Endpoint to update a user's profile
-app.put('/updateProfile', async (req, res) => {
-  const { id, username, profileImage } = req.body;
-
-  if (!id || !username) {
-    return res.status(400).json({ error: 'ID and username are required' });
+// Endpoint to update a user's profile
+app.put('/updateProfile', upload.single('profile_image'), async (req, res) => {
+  const { id, username } = req.body;
+  
+  // Check if the user ID is present
+  if (!id) {
+    return res.status(400).json({ error: 'ID is required' });
   }
 
   try {
-    const updateQuery = 'UPDATE User SET username = ?, profile_image = ? WHERE id = ?';
-    const values = [username, profileImage || null, id];
+    // Initialize query parameters
+    let query = 'UPDATE User SET ';
+    let params = [];
 
-    const [result] = await pool.query(updateQuery, values);
+    // If a username is provided, add it to the query
+    if (username) {
+      query += 'username = ?, ';
+      params.push(username);
+    }
+
+    // Handle profile image if uploaded
+    if (req.file) {
+      query += '|profile_image = ?, ';
+      params.push(req.file.path); // Path to the uploaded image
+    }
+
+    // Remove trailing comma and space from the query
+    query = query.slice(0, -2);
+    query += ' WHERE id = ?';
+    params.push(id);
+
+    // Check if there's actually something to update
+    if (params.length === 1) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    // Execute the query
+    const result = await pool.query(query, params);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.status(200).json({ message: 'Profile updated successfully' });
+    res.json({ message: 'Profile updated successfully' });
   } catch (error) {
     console.error('Error updating profile:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+    res.status(500).json({ error: 'Failed to update profile', details: error.message });
   }
 });
+
+
 
 // Endpoint to register a new user
 app.post('/register', async (req, res) => {
@@ -328,23 +398,24 @@ app.get('/api/portfolio/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Query to fetch investments for a specific user
-    const portfolio = await pool.query(
+    const [portfolio] = await pool.query(
       `SELECT Investments.*, Cards.title, Cards.price, Cards.targetPrice, Cards.image, 
-      Cards.return_value, Cards.investment, Cards.yield 
-      FROM Investments 
-      JOIN Cards ON Investments.card_id = Cards.id 
-      WHERE Investments.user_id = ?`, 
+       Cards.return_value, Cards.investment, Cards.yield 
+       FROM Investments 
+       JOIN Cards ON Investments.card_id = Cards.id 
+       WHERE Investments.user_id = ?`, 
       [userId]
     );
-    
-    res.json(portfolio);  // Send the fetched portfolio data as JSON
+
+    res.json(portfolio);
+
+    // Broadcast the portfolio update to WebSocket clients
+    broadcastPortfolioUpdate(portfolio);
   } catch (error) {
-    console.error("Error fetching portfolio:", error);
-    res.status(500).json({ error: "Error fetching portfolio" });
+    console.error('Error fetching portfolio:', error);
+    res.status(500).json({ error: 'Error fetching portfolio' });
   }
 });
-
 
 // Endpoint to add an investment
 app.post('/api/investments', async (req, res) => {
@@ -375,7 +446,13 @@ app.post('/api/investments', async (req, res) => {
   }
 });
 
-// Start the serverr
-app.listen(port, () => {
+// Upgrade HTTP server for WebSocket
+const server = app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+});
+
+server.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request);
+  });
 });

@@ -7,8 +7,8 @@ const FooterTabs = () => {
   const isFocused = useIsFocused();
 
   const tabs = [
-    { name: 'Home', icon: 'https://cdn-icons-png.freepik.com/512/20/20176.png', label: 'Projects' },
-    { name: 'Wallet', icon: 'https://pnghq.com/wp-content/uploads/free-wallet-png-images-without-background.png', label: 'Wallet' },
+    { name: 'Welcome', icon: 'https://cdn-icons-png.freepik.com/512/20/20176.png', label: 'Welcome' },
+    { name: 'Home', icon: 'https://cdn-icons-png.flaticon.com/512/2192/2192329.png', label: 'Projects' },
     { name: 'Portfolio', icon: 'https://cdn-icons-png.flaticon.com/512/122/122072.png', label: 'Portfolio' },
     { name: 'Profile', icon: 'https://www.pngall.com/wp-content/uploads/5/User-Profile-PNG-Free-Download.png', label: 'Profile' },
   ];
