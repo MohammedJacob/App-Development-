@@ -158,11 +158,12 @@ const DetailPage = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-      <Text style={styles.cardTitle}>{card.title}</Text>
+        <Text style={styles.cardTitle}>{card.title}</Text>
+
         {/* Yield Information */}
         <View style={styles.yieldInfoContainer}>
           <Text style={styles.cardValue}>${currentPrice}</Text>
-          <Text style={styles.cardTarget}>$`{targetPrice}</Text>
+          <Text style={styles.cardTarget}>${targetPrice}</Text>
         </View>
 
         {/* Progress Bar */}
@@ -171,111 +172,102 @@ const DetailPage = ({ route, navigation }) => {
             <View style={[styles.progress, { width: `${fundedPercentage}%` }]} />
           </View>
           <Text style={styles.progressPercentage}>{`${fundedPercentage.toFixed(0)}% Funded`}</Text>
+          <Image source={{ uri: card.image }} style={styles.image} />
         </View>
 
         <PaperCard.Content style={styles.cardContent}>
-            {/* Investment details */}
-            <View style={styles.investmentDetailContainer}>
-              <View style={styles.investmentDetail}>
-                <Text style={styles.label}>5 year total return</Text>
-                <Text style={styles.value}>
-                  {card.return_value ? card.return_value.split(': ')[1] : 'N/A'}
-                </Text>
-              </View>
-  
-              <View style={styles.investmentDetail}>
-                <Text style={styles.label}>Yearly investment return</Text>
-                <Text style={styles.value}>
-                  {card.investment ? card.investment.split(': ')[1] : 'N/A'}
-                </Text>
-              </View>
-  
-              <View style={styles.investmentDetail}>
-                <Text style={styles.label}>Projected net yield</Text>
-                <Text style={styles.value}>
-                  {card.yield ? card.yield.split(': ')[1] : 'N/A'}
-                </Text>
-              </View>
-              </View>
-              </PaperCard.Content>
-        
+          {/* Investment details */}
+          <View style={styles.investmentDetailContainer}>
+            <View style={styles.investmentDetail}>
+              <Text style={styles.label}>5 year total return</Text>
+              <Text style={styles.value}>
+                {card.return_value ? card.return_value.split(': ')[1] : 'N/A'}
+              </Text>
+            </View>
 
-        
-        {/* Investment Input Section */}
-        <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>Enter card details:</Text>
-          <TextInput
-            style={styles.input}
-            value={cardDetails.nameOnCard}
-            onChangeText={(text) => handleInputChange('nameOnCard', text)}
-            placeholder="Full name on card"
-          />
-          <TextInput
-            style={styles.input}
-            value={cardDetails.numberOnCard}
-            onChangeText={handleCardNumberChange}
-            placeholder="Card number"
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            value={cardDetails.expiryDate}
-            onChangeText={handleExpiryDateChange}
-            placeholder="Expiry date (MM/YY)"
-            keyboardType="numeric"
-          />
-          <TextInput
-            style={styles.input}
-            value={cardDetails.cvv}
-            onChangeText={handleCVVChange}
-            placeholder="CVV"
-            keyboardType="numeric"
-            secureTextEntry={true}
-          />
+            <View style={styles.investmentDetail}>
+              <Text style={styles.label}>Yearly investment return</Text>
+              <Text style={styles.value}>
+                {card.investment ? card.investment.split(': ')[1] : 'N/A'}
+              </Text>
+            </View>
 
-          {/* Investment Amount */}
-          <Text style={styles.inputLabel}>Investment Amount:</Text>
-          <TextInput
-            style={styles.input}
-            value={cardDetails.investmentAmount}
-            onChangeText={handleInvestmentAmountChange}
-            placeholder="Amount"
-            keyboardType="numeric"
-          />
+            <View style={styles.investmentDetail}>
+              <Text style={styles.label}>Projected net yield</Text>
+              <Text style={styles.value}>
+                {card.yield ? card.yield.split(': ')[1] : 'N/A'}
+              </Text>
+            </View>
+          </View>
+        </PaperCard.Content>
 
-          {/* Invest Button */}
-          <TouchableOpacity style={styles.investButton} onPress={handleInvest}>
-            <Text style={styles.investButtonText}>proceed with payment</Text>
-          </TouchableOpacity>
+        {/* Hide the card details and invest button if fully funded */}
+        {fundedPercentage < 100 && (
+          <>
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>Enter card details:</Text>
+              <TextInput
+                style={styles.input}
+                value={cardDetails.nameOnCard}
+                onChangeText={(text) => handleInputChange('nameOnCard', text)}
+                placeholder="Full name on card"
+              />
+              <TextInput
+                style={styles.input}
+                value={cardDetails.numberOnCard}
+                onChangeText={handleCardNumberChange}
+                placeholder="Card number"
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                value={cardDetails.expiryDate}
+                onChangeText={handleExpiryDateChange}
+                placeholder="Expiry date (MM/YY)"
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                value={cardDetails.cvv}
+                onChangeText={handleCVVChange}
+                placeholder="CVV"
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                value={cardDetails.investmentAmount}
+                onChangeText={handleInvestmentAmountChange}
+                placeholder="Investment amount"
+                keyboardType="numeric"
+              />
+            </View>
 
-        {/* Card Section */}
-        <PaperCard style={styles.card}>
-          <Image source={{ uri: card.image }} style={styles.image} />
-        </PaperCard>
-
-
-        {/* File Link Section */}
-        {filesLinks.length > 0 ? (
-          filesLinks.map((fileUrl, index) => (
-            <TouchableOpacity key={index} onPress={() => openFile(fileUrl)} style={styles.filesContainer}>
-              <Icon name="document-outline" size={24} color="#007AFF" />
-              <Text style={styles.filesSection}>File {index + 1}</Text>
+            {/* Invest button */}
+            <TouchableOpacity style={styles.investButton} onPress={handleInvest}>
+              <Text style={styles.investButtonText}>Invest Now</Text>
             </TouchableOpacity>
-          ))
-        ) : (
-          <Text style={styles.filesSection}>No files available</Text>
+          </>
         )}
 
-        {/* Description */}
-        <Text style={styles.description}>
-          {card.description}
-        </Text>
-        </View>
+        {/* Files Section with icons */}
+        {filesLinks.length > 0 && (
+          <View style={styles.filesSection}>
+            <Text style={styles.label}>Available Files:</Text>
+            {filesLinks.map((fileUrl, index) => (
+              <TouchableOpacity key={index} onPress={() => openFile(fileUrl)} style={styles.fileItem}>
+                <Icon name="document-outline" size={24} color="#1E90FF" />
+                <Text style={styles.fileLink}>File {index + 1}</Text>
+              </TouchableOpacity>
+            ))}
+
+            {/* Card description */}
+        <Text style={styles.description}>{card.description}</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
-
 export default DetailPage;
 
 const styles = StyleSheet.create({

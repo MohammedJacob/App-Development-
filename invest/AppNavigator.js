@@ -20,6 +20,7 @@ import TandCScreen from './T&C';
 import TandCdetails from './T&Cdetails';
 import ChangePassword from './Changepassword';
 import Welcome from './Welcome';
+import FAQ from './FAQ';
 
 
 
@@ -46,6 +47,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Onboarding" component={Onboarding} options={{ headerShown: false }} />
       <Stack.Screen name="TandC" component={TandCScreen} options={{ headerShown: false }} />
       <Stack.Screen name="TandCdetails" component={TandCdetails} options={{ headerShown: false }} />
+      <Stack.Screen name="FAQ" component={FAQ} options={{ headerShown: false }} />
       <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
     </Stack.Navigator>
   </NavigationContainer>

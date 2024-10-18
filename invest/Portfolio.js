@@ -85,21 +85,13 @@ const PortfolioScreen = ({ navigation }) => {
 
   // Handle touch and drag movement
   const handleTouch = (event, chartWidth) => {
-    // Persist the event immediately
     event.persist();
-
-    // Get the current touch position
     const touchX = event.nativeEvent.locationX;
     const index = Math.floor((touchX / chartWidth) * last7Days.length);
-
-    // Clamp the index to avoid out-of-bound errors
     const clampedIndex = Math.max(0, Math.min(index, last7Days.length - 1));
-
-    // Update the selected index
     setSelectedIndex(clampedIndex);
   };
 
-  // Add a touch move handler that reacts to both touch and drag movements
   const handleTouchMove = (event) => {
     handleTouch(event, screenWidth - 32);
   };
@@ -118,16 +110,16 @@ const PortfolioScreen = ({ navigation }) => {
 
               {/* Graph with touch functionality */}
               <View
-                onTouchMove={handleTouchMove} // Updated to use the new handleTouchMove function
+                onTouchMove={handleTouchMove}
                 onTouchEnd={() => setSelectedIndex(null)}
-                onTouchStart={(e) => handleTouch(e, screenWidth - 32)} // Respond on touch start
+                onTouchStart={(e) => handleTouch(e, screenWidth - 32)}
               >
                 <LineChart
                   data={{
-                    labels: dateLabels, // Date labels for X-axis
+                    labels: dateLabels,
                     datasets: [
                       {
-                        data: cumulativeInvestmentData, // Cumulative investment data for Y-axis
+                        data: cumulativeInvestmentData,
                       },
                     ],
                   }}
@@ -136,7 +128,7 @@ const PortfolioScreen = ({ navigation }) => {
                   withDots={false}
                   withInnerLines={false}
                   withHorizontalLabels={false}
-                  bezier // Smooth out the graph
+                  bezier
                   chartConfig={{
                     backgroundColor: '#ffffff',
                     backgroundGradientFrom: '#ffffff',
@@ -163,13 +155,15 @@ const PortfolioScreen = ({ navigation }) => {
                 )}
               </View>
 
-              {/* Investment Cards */}
-              {portfolio.slice(-7).map((item) => (
-                <View key={item.id} style={styles.investmentCard}>
-                  <Text style={styles.itemText}>{item.invested_stock}</Text>
-                  <Text style={styles.itemText}>${item.amount_invested}</Text>
-                </View>
-              ))}
+              {/* Investment Cards sorted by newest first */}
+              {portfolio
+                .sort((a, b) => new Date(b.investment_date) - new Date(a.investment_date)) // Sort by date
+                .map((item) => (
+                  <View key={item.id} style={styles.investmentCard}>
+                    <Text style={styles.itemText}>{item.invested_stock}</Text>
+                    <Text style={styles.itemText}>${item.amount_invested}</Text>
+                  </View>
+                ))}
             </View>
           ) : (
             <View style={styles.errorContainer}>
@@ -266,10 +260,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 255, 0.5)',
   },
   portfolioValueText: {
-    marginTop: 10,
+    position: 'absolute',
+    top: 230,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: '#000',
     fontSize: 16,
-    color: '#555',
   },
 });
 
+// Exporting the component
 export default PortfolioScreen;

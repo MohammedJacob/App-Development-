@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, Switch, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Linking, Text, TouchableOpacity, Switch, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons'; // You may need to install this library
 
 const SettingsScreen = ({ navigation }) => {
@@ -41,7 +41,6 @@ const SettingsScreen = ({ navigation }) => {
                 <Text style={styles.settingText}>Security</Text>
               </View>
             </TouchableOpacity>
-
             <TouchableOpacity 
               style={[styles.setting, activeSection === 'SocialConnections' && styles.activeSetting]}
                                                                                                                                                                                                                                                                                                                                                                                                                                                     onPress={() => handlePress('SocialConnectionsScreen', 'SocialConnections')}
@@ -51,7 +50,16 @@ const SettingsScreen = ({ navigation }) => {
                 <Text style={styles.settingText}>Social Connections</Text>
               </View>
             </TouchableOpacity>
-
+             {/* FAQ Subcategory */}
+             <TouchableOpacity 
+                style={[styles.setting, activeSection === 'Wallet' && styles.activeSetting]}
+                onPress={() => handlePress('Wallet', 'Wallet')}
+              >
+                <View style={styles.settingLeft}>
+                <Icon name="wallet-outline" size={20} color="#fff" />
+                  <Text style={styles.settingText}>Wallet</Text>
+                </View>
+              </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.setting, activeSection === 'LoginHistory' && styles.activeSetting]}
               onPress={() => handlePress('LoginHistoryScreen', 'LoginHistory')}
@@ -74,7 +82,7 @@ const SettingsScreen = ({ navigation }) => {
 
             <TouchableOpacity 
               style={[styles.setting, activeSection === 'TandC' && styles.activeSetting]}
-              onPress={() => handlePress('T&CScreen', 'TandC')}
+              onPress={() => handlePress('TandCdetails', 'TandC')}
             >
               <View style={styles.settingLeft}>
                 <Icon name="document-outline" size={20} color="#fff" />
@@ -128,7 +136,7 @@ const SettingsScreen = ({ navigation }) => {
               {/* About Us Subcategory */}
               <TouchableOpacity 
                 style={[styles.setting, activeSection === 'About Us' && styles.activeSetting]}
-                onPress={() => handlePress('AboutUsScreen', 'AboutUs')}
+                onPress={() => handlePress('About Us', 'About Us')}
               >
                 <View style={styles.settingLeft}>
                   <Icon name="information-circle-outline" size={20} color="#fff" />
@@ -139,15 +147,28 @@ const SettingsScreen = ({ navigation }) => {
               {/* FAQ Subcategory */}
               <TouchableOpacity 
                 style={[styles.setting, activeSection === 'FAQ' && styles.activeSetting]}
-                onPress={() => handlePress('FAQScreen', 'FAQ')}
+                onPress={() => handlePress('FAQ', 'FAQ')}
               >
                 <View style={styles.settingLeft}>
                   <Icon name="help-buoy-outline" size={20} color="#fff" />
                   <Text style={styles.settingText}>FAQ</Text>
                 </View>
               </TouchableOpacity>
+
+              {/* FAQ Subcategory */}
+              <TouchableOpacity 
+                style={[styles.setting, activeSection === 'ContactUs' && styles.activeSetting]}
+                onPress={() => Linking.openURL('mailto:contact@reneum.com')} // Open email client
+              >
+                <View style={styles.settingLeft}>
+                  <Icon name="mail-outline" size={20} color="#fff" />
+                  <Text style={styles.settingText}>Email Us</Text>
+                </View>
+              </TouchableOpacity>
             </View>
           )}
+
+          
         </View>
       </ScrollView>
     </SafeAreaView>

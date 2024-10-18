@@ -12,17 +12,27 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires access to your camera.",
+        "NSPhotoLibraryUsageDescription": "This app requires access to your photo library."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/Company_logo.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/Company_logo.png"
     },
+    "scheme": "invest",
     "extra": {
       "eas": {
         "projectId": "26be2fb3-e82c-4d65-b12a-3db75afae6be"

@@ -9,12 +9,13 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  TextInput,
 } from 'react-native';
 import { Card as PaperCard, Button } from 'react-native-paper';
-import Footer from './components/footer'; // Ensure the correct import path
+import Footer from './components/footer';
 import SettingsImage from './assets/settings.png';
 import SearchIcon from './assets/SearchIcon.png';
-import { useUser } from './UserContext'; // Import useUser hook
+import { useUser } from './UserContext';
 
 // Utility function to format prices
 const formatPrice = (price) => {
@@ -40,6 +41,7 @@ const fetchCards = async () => {
 const Card = ({ card, onPress }) => {
   const currentPrice = formatPrice(card.price);
   const targetPrice = formatPrice(card.targetPrice);
+  const yieldValue = formatPrice(card.yield);
 
   const fundedPercentage = parseFloat(targetPrice.replace(/[^0-9.-]+/g, ''))
     ? Math.min(
@@ -49,87 +51,80 @@ const Card = ({ card, onPress }) => {
       )
     : 0;
 
-    return (
-      <TouchableOpacity onPress={onPress}>
-        <PaperCard style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderContent}>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.cardTitle}>{card.title}</Text>
-              </View>
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <PaperCard style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderContent}>
+            <View style={styles.cardHeaderText}>
+              <Text style={styles.cardTitle}>{card.title}</Text>
             </View>
           </View>
-  
-          {/* Price section - moved above the progress bar */}
-          <View style={styles.priceContainer}>
-            <Text style={styles.cardPrice}>${currentPrice}</Text>
-            <Text style={styles.cardTarget}>${targetPrice}</Text>
-          </View>
-  
-          {/* Progress Bar and Image Section */}
-          <View style={styles.progressBarAndImageContainer}>
-            <View style={styles.progressBarContainer}>
-              <View style={styles.progressBarBackground}>
-                <View style={[styles.progressBar, { width: `${fundedPercentage}%` }]} />
-              </View>
+        </View>
+
+        <View style={styles.priceContainer}>
+          <Text style={styles.cardPrice}>${currentPrice}</Text>
+          <Text style={styles.cardTarget}>${targetPrice}</Text>
+        </View>
+
+        <View style={styles.progressBarAndImageContainer}>
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarBackground}>
+              <View style={[styles.progressBar, { width: `${fundedPercentage}%` }]} />
             </View>
-  
-            {/* Image to the right of the progress bar */}
-            <Image source={{ uri: card.image }} style={styles.image} />
           </View>
-          <Text style={styles.percentageText}>{fundedPercentage.toFixed(0)}%</Text>
-  
-          {/* Removed the old priceContainer section here */}
-  
-          <PaperCard.Content style={styles.cardContent}>
-            {/* Investment details */}
-            <View style={styles.investmentDetailContainer}>
-              <View style={styles.investmentDetail}>
-                <Text style={styles.label}>5 year total return</Text>
-                <Text style={styles.value}>
-                  {card.return_value ? card.return_value.split(': ')[1] : 'N/A'}
-                </Text>
-              </View>
-  
-              <View style={styles.investmentDetail}>
-                <Text style={styles.label}>Yearly investment return</Text>
-                <Text style={styles.value}>
-                  {card.investment ? card.investment.split(': ')[1] : 'N/A'}
-                </Text>
-              </View>
-  
-              <View style={styles.investmentDetail}>
-                <Text style={styles.label}>Projected net yield</Text>
-                <Text style={styles.value}>
-                  {card.yield ? card.yield.split(': ')[1] : 'N/A'}
-                </Text>
-              </View>
+
+          <Image source={{ uri: card.image }} style={styles.image} />
+        </View>
+        <Text style={styles.percentageText}>{fundedPercentage.toFixed(0)}%</Text>
+
+        <PaperCard.Content style={styles.cardContent}>
+          <View style={styles.investmentDetailContainer}>
+            <View style={styles.investmentDetail}>
+              <Text style={styles.label}>5 year total return</Text>
+              <Text style={styles.value}>
+                {card.return_value ? card.return_value.split(': ')[1] : 'N/A'}
+              </Text>
             </View>
-  
-            {/* Left-aligned button */}
-            <Button mode="contained" style={styles.detailButtonLeft} onPress={onPress}>
-              Show more information
-            </Button>
-          </PaperCard.Content>
-        </PaperCard>
-      </TouchableOpacity>
-    );
-  };
+
+            <View style={styles.investmentDetail}>
+              <Text style={styles.label}>Yearly investment return</Text>
+              <Text style={styles.value}>
+                {card.investment ? card.investment.split(': ')[1] : 'N/A'}
+              </Text>
+            </View>
+
+            <View style={styles.investmentDetail}>
+              <Text style={styles.label}>Projected net yield</Text>
+              <Text style={styles.value}>
+                {card.yield ? card.yield.split(': ')[1] : 'N/A'}
+              </Text>
+            </View>
+          </View>
+
+          <Button mode="contained" style={styles.detailButtonLeft} onPress={onPress}>
+            Show more information
+          </Button>
+        </PaperCard.Content>
+      </PaperCard>
+    </TouchableOpacity>
+  );
+};
 
 const HomeScreen = ({ navigation, route }) => {
-  const { isGuest } = route.params || { isGuest: false }; // Default to false if not provided
-  const { userData } = useUser(); // Access userData from context
+  const { isGuest } = route.params || { isGuest: false };
+  const { userData } = useUser();
   const [activeTab, setActiveTab] = useState('Available');
+  const [searchQuery, setSearchQuery] = useState('');
   const [cards, setCards] = useState([]);
   const [webSocket, setWebSocket] = useState(null);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
-  // WebSocket setup
   useEffect(() => {
-    const ws = new WebSocket('ws://192.168.1.241:3000'); // WebSocket server address
+    const ws = new WebSocket('ws://192.168.1.241:3000');
 
     ws.onopen = () => {
       console.log('WebSocket connected');
-      // Optionally send an initial message to the server
       ws.send(JSON.stringify({ type: 'subscribe', userId: userData?.id }));
     };
 
@@ -137,7 +132,7 @@ const HomeScreen = ({ navigation, route }) => {
       const message = JSON.parse(event.data);
       if (message.type === 'portfolioUpdate') {
         console.log('Portfolio update received:', message.data);
-        setCards(message.data); // Update the cards state with new portfolio data
+        setCards(message.data);
       }
     };
 
@@ -174,7 +169,8 @@ const HomeScreen = ({ navigation, route }) => {
     return cards.filter((card) => {
       const currentPrice = getPrice(card.price);
       const targetPrice = getPrice(card.targetPrice);
-      return activeTab === 'Available' ? currentPrice < targetPrice : currentPrice >= targetPrice;
+      const matchesSearch = card.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return (activeTab === 'Available' ? currentPrice < targetPrice : currentPrice >= targetPrice) && matchesSearch;
     });
   };
 
@@ -186,13 +182,59 @@ const HomeScreen = ({ navigation, route }) => {
     }
   };
 
+  // Function to handle the search
+  const handleSearch = () => {
+    if (searchQuery.trim() === '') {
+      Alert.alert('Empty Search', 'Please enter a search term.');
+    } else {
+      console.log('Searching for:', searchQuery); // Console log the search query
+      setIsSearchVisible(true); // Hide the search bar after searching
+    }
+  };
+
+  // Function to clear the search query
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
+  // Toggle search input visibility
+  const toggleSearch = () => {
+    setIsSearchVisible((prev) => !prev);
+    setSearchQuery(''); // Clear search query when toggling
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
         <Text style={styles.headerText}>Sites</Text>
+        {isSearchVisible && (
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
+              <Text style={styles.searchButtonText}>Search</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+              <Text style={styles.clearButtonText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        <View style={styles.tabContainer}>
+          {['Rec', 'Invest', 'Loan'].map((tab) => (
+            <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tab}>
+              <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
+              {activeTab === tab && <View style={styles.activeTabIndicator} />}
+            </TouchableOpacity>
+          ))}
+         
+        </View>
         <View style={styles.iconContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate('Search')} style={styles.iconButton}>
+          <TouchableOpacity onPress={toggleSearch} style={styles.iconButton}>
             <Image source={SearchIcon} style={styles.icon} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.iconButton}>
@@ -210,12 +252,13 @@ const HomeScreen = ({ navigation, route }) => {
         ))}
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView>
         {filterCards(cards).map((card) => (
           <Card key={card.id} card={card} onPress={() => handleCardPress(card)} />
         ))}
       </ScrollView>
-      <Footer navigation={navigation} />
+
+      <Footer />
     </SafeAreaView>
   );
 };
@@ -229,7 +272,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    position:'relative',
+    padding: 5,
     backgroundColor: '#fff', // Background color for the header
     borderBottomWidth: 1, // Bottom border for the header
     borderBottomColor: '#ccc',
@@ -242,6 +286,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     flexDirection: 'row',
+    position:'st'
   },
   iconButton: {
     marginLeft: 16,
@@ -257,7 +302,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
   },
   tab: {
-    padding: 16,
+    padding: 10,
   },
   tabText: {
     fontSize: 16,
@@ -272,9 +317,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#34c659',
     marginTop: 8,
   },
+
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly', // This will evenly space out the tabs
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
   scrollView: {
     flex: 1,
-    padding: 16,
+    
   },
   card: {
     backgroundColor: '#fff', // White background to engulf the entire card
@@ -289,7 +341,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 5,
   },
   cardHeaderContent: {
     flex: 1,
@@ -355,7 +407,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#4088f4',
     alignSelf: 'flex-start', // Align button to the left
   },
-
+  searchButtonText: {
+    fontSize: 16,
+    color: '#000', // Color for search button text
+  },
+  clearButtonText: {
+    fontSize: 16,
+    color: '#FF0000', // Color for clear button text
+  },
   
   image: {
     width: 90,
