@@ -21,6 +21,9 @@ import TandCdetails from './T&Cdetails';
 import ChangePassword from './Changepassword';
 import Welcome from './Welcome';
 import FAQ from './FAQ';
+import RecCard from './Recs';
+import Roadmap from './Roadmap';
+import OurMission from './OurMission';
 
 
 
@@ -33,6 +36,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Details" component={DetailPage} options={{ headerShown: false }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Roadmap" component={Roadmap} options={{ headerShown: false }} />
       <Stack.Screen name="LoginMethod" component={LoginMethod} options={{ headerShown: false }} />
       <Stack.Screen name="LoginMethodEmail" component={LoginMethodEmail} options={{ headerShown: false }} />
       <Stack.Screen name="About Us" component={AboutUsScreen} options={{ headerShown: false }} />
@@ -42,6 +46,7 @@ const AppNavigator = () => (
       <Stack.Screen name="Privacy Policy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Portfolio" component={PortfolioScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Deposit" component={DepositPage} options={{ headerShown: false }} />
+      <Stack.Screen name="OurMission" component={OurMission} options={{ headerShown: false }} />
       <Stack.Screen name="Withdraw" component={WithdrawPage} options={{ headerShown: false }} />
       <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
       <Stack.Screen name="Onboarding" component={Onboarding} options={{ headerShown: false }} />
@@ -49,6 +54,7 @@ const AppNavigator = () => (
       <Stack.Screen name="TandCdetails" component={TandCdetails} options={{ headerShown: false }} />
       <Stack.Screen name="FAQ" component={FAQ} options={{ headerShown: false }} />
       <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
+      <Stack.Screen name="Recs" component={RecCard} options={{ headerShown: false }} />
     </Stack.Navigator>
   </NavigationContainer>
 );

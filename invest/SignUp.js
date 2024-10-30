@@ -28,6 +28,7 @@ const SignupPage = () => {
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showRequirements, setShowRequirements] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -154,12 +155,18 @@ const SignupPage = () => {
     return valid;
   };
 
+
+
   const toggleCard = (cardName) => {
     setExpandedCard((prevCard) => (prevCard === cardName ? null : cardName));
   };
 
   const handleSignInPress = () => {
     navigation.navigate('LoginMethod');
+  };
+
+  const handleGoogleLogin = () => {
+    navigation.navigate('Onboarding');
   };
 
   const handleVerifyIdentity = () => {
@@ -210,129 +217,144 @@ const SignupPage = () => {
     );
   };
 
+  
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {/* Toggleable Card for Sign Up */}
-          <TouchableOpacity style={styles.card} onPress={() => toggleCard('signup')}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Sign Up</Text>
-              <Text style={styles.cardTime}>1 minute</Text>
-            </View>
-            {expandedCard === 'signup' && (
-              <View style={styles.form}>
-                <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
-                {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+          <View>
+            <Text style={styles.cardTitle}>Sign up</Text>
+          </View>
+          <View style={styles.form}>
+            <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} />
+            <TextInput style={styles.input} placeholder="Last Name" value={lastName} onChangeText={setLastName} />
+            <TextInput
+              style={styles.input}
+              placeholder="Email Address"
+              value={emailAddress}
+              onChangeText={setEmailAddress}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
 
-                <TextInput style={styles.input} placeholder="Last Name" value={lastName} onChangeText={setLastName} />
-                {errors.lastName ? <Text style={styles.errorText}>{errors.lastName}</Text> : null}
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email Address"
-                  value={emailAddress}
-                  onChangeText={setEmailAddress}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.showPasswordButton}>
+                <Image
+                  source={{
+                    uri: showPassword
+                      ? 'https://img.icons8.com/material-outlined/24/000000/visible.png'
+                      : 'https://img.icons8.com/material-outlined/24/000000/invisible.png',
+                  }}
+                  style={styles.showPasswordsicon}
                 />
-                {errors.emailAddress ? <Text style={styles.errorText}>{errors.emailAddress}</Text> : null}
+              </TouchableOpacity>
+            </View>
 
-                <View style={styles.passwordContainer}>
-                  <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.showPasswordButton}>
-                    <Image
-                      source={{
-                        uri: showPassword
-                          ? 'https://img.icons8.com/material-outlined/24/000000/visible.png'
-                          : 'https://img.icons8.com/material-outlined/24/000000/invisible.png',
-                      }}
-                      style={styles.showPasswordsicon}
-                    />
-                  </TouchableOpacity>
-                </View>
-                {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.showPasswordButton}
+              >
+                <Image
+                  source={{
+                    uri: showConfirmPassword
+                      ? 'https://img.icons8.com/material-outlined/24/000000/visible.png'
+                      : 'https://img.icons8.com/material-outlined/24/000000/invisible.png',
+                  }}
+                  style={styles.showPasswordsicon}
+                />
+              </TouchableOpacity>
+            </View>
 
-                <View style={styles.passwordContainer}>
-                  <TextInput
-                    style={styles.passwordInput}
-                    placeholder="Confirm Password"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry={!showConfirmPassword}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={styles.showPasswordButton}
-                  >
+            <TouchableOpacity
+          onPress={() => setShowRequirements(!showRequirements)}
+          style={styles.infoButton}
+        >
+          <Text style={styles.infoIcon}>ℹ️</Text>
+        </TouchableOpacity>
 
-                    
-                    <Image
-                      source={{
-                        uri: showConfirmPassword
-                          ? 'https://img.icons8.com/material-outlined/24/000000/visible.png'
-                          : 'https://img.icons8.com/material-outlined/24/000000/invisible.png',
-                      }}
-                      style={styles.showPasswordsicon}
-                    />
-                  </TouchableOpacity>
-                </View>
-                {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
+            {errors.confirmPassword ? <Text>{errors.confirmPassword}</Text> : null}
 
-                <View style={styles.requirementsBox}>
-                  <Text style={styles.requirementsText}>
-                    Password must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character.
-                  </Text>
-                </View>
-
-                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
-                  {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Sign Up</Text>}
-                </TouchableOpacity>
+            {/* Conditionally render the requirements box */}
+            {showRequirements && (
+              <View style={styles.requirementsBox}>
+                <Text>Password Requirements:</Text>
+                <Text>• Must be at least 8 characters long</Text>
+                <Text>• Must contain at least 1 uppercase letter</Text>
+                <Text>• Must contain at least 1 lowercase letter</Text>
+                <Text>• Must contain at least 1 number</Text>
+                <Text>• Must contain at least 1 special character (e.g., !, @, #, $)</Text>
               </View>
             )}
-          </TouchableOpacity>
 
-          {/* Card for Verify Your Identity */}
-<TouchableOpacity style={[styles.card, { marginTop: 20 }]} onPress={handleVerifyIdentity}>
-  <View style={styles.cardHeader}>
-    <Text style={styles.cardTitle}>Verify Your Identity</Text>
-    <Text style={styles.cardTime}>2 minutes</Text>
-  </View>
-</TouchableOpacity>
+            {/* Terms and Conditions */}
+            <Text style={styles.linkText} onPress={() => navigation.navigate('TandCdetails')}>
+              I am <Text style={styles.signinLink}> Terms & Conditions</Text> and <Text style={styles.signinLink}>Risk Statement</Text>
+            </Text>
 
-{/* Skip This button - unchanged */}
-<TouchableOpacity style={[styles.skipButton]} onPress={handleGuestLogin}>
-  <Text style={styles.skipButtonText}>Continue with this later</Text>
-</TouchableOpacity>
+            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitButtonText}>Create account</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
-
-
-
-<TouchableOpacity style={styles.signinButton} onPress={handleSignInPress}>
-  <Text style={styles.signinButtonText}>Log in</Text>
-</TouchableOpacity>
+          <Text style={styles.orText}>or</Text>
 
 
+          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+        <Image
+          source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }}
+          style={styles.googleIcon}
+        />
+        <Text style={styles.googleButtonText}>Sign In with Google</Text>
+      </TouchableOpacity>
 
+          {/* Sign In and Continue as Guest Links */}
+          <View style={styles.linkContainer}>
+            <Text style={styles.linkText}>
+              Already have an account?{' '}
+              <Text style={styles.signinLink} onPress={handleSignInPress}>
+                Sign In
+              </Text>
+            </Text>
+            <Text style={styles.signinLink} onPress={handleGuestLogin}>
+              Continue as Guest
+            </Text>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+
+  
+  
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    top: 50,
+    padding:15,
+    paddingTop:35,
     backgroundColor: '#F9F9F9',
   },
   scrollContainer: {
@@ -365,13 +387,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: 20,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '900',
+    textAlign:'center',
     color: '#333',
   },
   cardTime: {
@@ -414,20 +433,48 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
-  errorText: {
-    color: 'red',
-    fontSize: 12,
-    marginBottom: 10,
-  },
   submitButton: {
-    backgroundColor: '#4CAF50',
-    height: 45,
+    backgroundColor: '#007AFF',
+    height: 55,
+    marginTop:20,
+    marginBottom:20,
+
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
   },
   submitButtonText: {
     color: '#FFF',
+    fontSize: 16,
+  },
+
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginBottom: 25,
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
+
+  orText: {
+    textAlign: 'center',
+    color: '#aaa',
+    marginVertical: 10,
+  },
+  googleButtonText: {
+    color: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
     fontSize: 16,
   },
   
@@ -441,8 +488,9 @@ const styles = StyleSheet.create({
   },
   signinLink: {
     textAlign:'center',
-    color: '#4CAF50',
+    color: '#3e89f7',
     marginLeft: 5,
+    textDecorationLine: 'underline',
   },
 
   verifyButton: {
@@ -457,8 +505,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+
+  infoButton: {
+    alignSelf: 'flex-end', // Aligns the button to the end of the row
+    marginLeft: 8,
+    paddingBottom: 10,
+    paddingTop: 5,
+  },
+
+  infoIcon:{
+    justifyContent:'flex-end',
+  },
   requirementsBox: {
-    backgroundColor: '#e0f7fa', // Light blue background
+    backgroundColor: '#edf5ff', // Light blue background
     padding: 10,
     borderRadius: 5,
     marginTop: 10,
@@ -466,7 +525,7 @@ const styles = StyleSheet.create({
   },
   
   requirementsText: {
-    color: '#004d40', // Darker text color for contrast
+    color: '#991515', // Darker text color for contrast
     fontSize: 14,
   },
 
@@ -482,6 +541,18 @@ const styles = StyleSheet.create({
     color: '#fff', // Choose your desired text color
     fontSize: 16,
     textAlign:'center'
+  },
+
+  linkText: {
+    textAlign:'center'
+  },
+
+  requirementsText: {
+    fontSize: 16,
+    color: 'black', // Default color
+  },
+  invalid: {
+    color: 'red', // Turns red when the password doesn't meet the criteria
   },
 });
 

@@ -165,6 +165,36 @@ const SettingsScreen = ({ navigation }) => {
                   <Text style={styles.settingText}>Email Us</Text>
                 </View>
               </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.setting, activeSection === 'Roadmap' && styles.activeSetting]}
+                onPress={() => handlePress('Roadmap', 'Roadmap')}
+              >
+                <View style={styles.settingLeft}>
+                  <Icon name="map-outline" size={20} color="#fff" />
+                  <Text style={styles.settingText}>Roadmap</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.setting, activeSection === 'OurMission' && styles.activeSetting]}
+                onPress={() => handlePress('OurMission', 'OurMission')}
+              >
+                <View style={styles.settingLeft}>
+                  <Icon name="earth-outline" size={20} color="#fff" />
+                  <Text style={styles.settingText}>Our Misson</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.setting, activeSection === 'Home' && styles.activeSetting]}
+                onPress={() => handlePress('Home', 'Home')}
+              >
+                <View style={styles.settingLeft}>
+                  <Icon name="storefront-outline" size={20} color="#fff" />
+                  <Text style={styles.settingText}>Marketplace</Text>
+                </View>
+              </TouchableOpacity>
             </View>
           )}
 

@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { Picker } from '@react-native-picker/picker';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // import the icon set
+
 import {
   SafeAreaView,
   StatusBar,
@@ -13,8 +16,9 @@ import {
 } from 'react-native';
 import { Card as PaperCard, Button } from 'react-native-paper';
 import Footer from './components/footer';
-import SettingsImage from './assets/settings.png';
-import SearchIcon from './assets/SearchIcon.png';
+import menuicon from './assets/MenuIcon.png';
+import Rec from './Recs';
+import renuem from './assets/Renuem.png';
 import { useUser } from './UserContext';
 
 // Utility function to format prices
@@ -31,8 +35,7 @@ const fetchCards = async () => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     return await response.json();
   } catch (error) {
-    console.error('Error fetching cards:', error);
-    Alert.alert('Network Error', 'Failed to load data. Please try again later.');
+    
     return [];
   }
 };
@@ -114,10 +117,13 @@ const Card = ({ card, onPress }) => {
 const HomeScreen = ({ navigation, route }) => {
   const { isGuest } = route.params || { isGuest: false };
   const { userData } = useUser();
+  const { selectedCountry } = useUser();
   const [activeTab, setActiveTab] = useState('Available');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTechnology, setSelectedTechnology] = useState('');
   const [cards, setCards] = useState([]);
   const [webSocket, setWebSocket] = useState(null);
+  const [selectedValue, setSelectedValue] = React.useState("option1");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   useEffect(() => {
@@ -202,130 +208,180 @@ const HomeScreen = ({ navigation, route }) => {
     setIsSearchVisible((prev) => !prev);
     setSearchQuery(''); // Clear search query when toggling
   };
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Sites</Text>
-        {isSearchVisible && (
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
-              <Text style={styles.searchButtonText}>Search</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
-              <Text style={styles.clearButtonText}>Clear</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        <View style={styles.tabContainer}>
-          {['Rec', 'Invest', 'Loan'].map((tab) => (
-            <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tab}>
-              <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
-              {activeTab === tab && <View style={styles.activeTabIndicator} />}
-            </TouchableOpacity>
-          ))}
-         
-        </View>
-        <View style={styles.iconContainer}>
-          <TouchableOpacity onPress={toggleSearch} style={styles.iconButton}>
-            <Image source={SearchIcon} style={styles.icon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.iconButton}>
-            <Image source={SettingsImage} style={styles.icon} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.tabContainer}>
-        {['Available', 'Sold'].map((tab) => (
-          <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={styles.tab}>
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
-            {activeTab === tab && <View style={styles.activeTabIndicator} />}
-          </TouchableOpacity>
-        ))}
-      </View>
-
       <ScrollView>
+        {/* Header View */}
+        <View style={styles.header}>
+          {/* Renuem Logo */}
+          <Image source={renuem} style={styles.headerImage} />
+        
+
+         {/* Hamburger Menu Icon */}
+         <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('Settings')}>
+  <Image source={menuicon} style={styles.icon} />
+</TouchableOpacity>
+          </View>
+  
+          <View style={styles.tabContainer}>
+  <TouchableOpacity
+    key="Rec"
+    onPress={() => setActiveTab('Rec')}
+    style={styles.tab}
+  >
+    <View style={styles.tabItem}>
+      <Icon name="clock-outline" size={20} color={ '#99abaf'} />
+      <Text style={[styles.tabText, activeTab === 'Rec' && styles.activeTabText]}>
+        RECs
+      </Text>
+    </View>
+    {activeTab === 'Rec' && <View style={styles.activeTabIndicator} />}
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    key="Invest"
+    onPress={() => setActiveTab('Invest')}
+    style={styles.tab}
+  >
+    <View style={styles.tabItem}>
+      <Icon name="chart-pie" size={20} color={ '#99abaf'} />
+      <Text style={[styles.tabText, activeTab === 'Invest' && styles.activeTabText]}>
+        Equity
+      </Text>
+    </View>
+    {activeTab === 'Invest' && <View style={styles.activeTabIndicator} />}
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    key="Loan"
+    onPress={() => setActiveTab('Loan')}
+    style={styles.tab}
+  >
+    <View style={styles.tabItem}>
+      <Icon name="percent" size={20} color={ '#99abaf'} />
+      <Text style={[styles.tabText, activeTab === 'Loan' && styles.activeTabText]}>
+        Loans
+      </Text>
+    </View>
+    {activeTab === 'Loan' && <View style={styles.activeTabIndicator} />}
+  </TouchableOpacity>
+</View>
+  
+          {/* Technology Picker */}
+          <Picker
+        selectedValue={selectedValue}
+        style={styles.picker}
+        onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
+      >
+            <Picker.Item label="Technology" value="" />
+            <Picker.Item label="Solar" value="solar" />
+            <Picker.Item label="Wind" value="wind" />
+          </Picker>
+  
+          {/* Country Picker */}
+
+          <Picker
+        selectedValue={selectedValue}
+        style={styles.picker}
+        onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
+      >
+            <Picker.Item label="Country" value="" />
+            <Picker.Item label="USA" value="usa" />
+            <Picker.Item label="Germany" value="germany" />
+          </Picker>
+          
+        
+      
+  
+      {/* Content */}
+      
+        <View>
+          <Text style={styles.headerText}>Marketplace</Text>
+        </View>
+
+        <Rec/>
         {filterCards(cards).map((card) => (
           <Card key={card.id} card={card} onPress={() => handleCardPress(card)} />
         ))}
       </ScrollView>
-
+  
+      {/* Footer */}
       <Footer />
     </SafeAreaView>
   );
-};
+};  
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa', // Light background color for the whole screen
+    backgroundColor:'#f3f9fa',
+    paddingStart:15,
+    paddingEnd:15,
+   
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     position:'relative',
-    padding: 5,
-    backgroundColor: '#fff', // Background color for the header
-    borderBottomWidth: 1, // Bottom border for the header
-    borderBottomColor: '#ccc',
   },
   
   headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 25,
+    marginTop:10,
+    marginBottom: 15,
+    fontWeight: '900',
     color: '#1f2545', // Darker text color for better readability
   },
   iconContainer: {
     flexDirection: 'row',
-    position:'st'
   },
   iconButton: {
     marginLeft: 16,
   },
   icon: {
-    width: 24,
-    height: 24,
+    width: 30,
+    height: 30,
   },
   tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    justifyContent: 'space-around',
+    marginTop: 10,
   },
   tab: {
-    padding: 10,
+    alignItems: 'center',
+    flexDirection: 'column',
+    paddingVertical: 5,
+    marginHorizontal: 10, // Add horizontal space between each tab
+  },
+  tabItem: {
+    flexDirection: 'row', // Aligns icon and text in a row
+    
   },
   tabText: {
     fontSize: 16,
-    color: '#555', // Slightly lighter text color for inactive tabs
+    color: '#535d69',
+    marginLeft: 2, // Adds space between icon and text
   },
   activeTabText: {
-    fontWeight: 'bold',
-    color: '#000',
+    color: '#535d69', // Color for active tab text
   },
   activeTabIndicator: {
-    height: 3,
+    height: 2,
     backgroundColor: '#34c659',
-    marginTop: 8,
+    width: '100%',
+    marginTop: 4,
   },
+  
 
   tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly', // This will evenly space out the tabs
     alignItems: 'center',
-    paddingVertical: 10,
+    marginBottom:20
   },
   scrollView: {
     flex: 1,
+    
     
   },
   card: {
@@ -351,9 +407,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 28,
-    marginVertical: -25, // Reduce vertical margins to lessen the spa
-    top:15,
-    fontWeight: '900',
+    fontWeight: 900,
     color: '#1f2545', // Darker title text color
   },
 
@@ -387,6 +441,12 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
+  },
+
+  headerImage: {
+    width: 200,
+    height: 100, // Adjust these values based on your image dimensions
+    resizeMode: 'contain', // Ensures the image retains its aspect ratio
   },
 
   investmentDetail: {
@@ -462,6 +522,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
   },
+
+  searchContainer: {
+    backgroundColor:'#fff'
+  },
+  searchInput: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+  },
+  filterContainer: {
+    flexDirection: 'column', // Change to 'column' for vertical stacking
+    margin: 10,
+  },
+  dropdown: {
+    borderColor: '#ccc',
+    borderWidth: 88,
+    borderRadius: 5,
+    padding: 10,
+    
+  },
+  picker: {
+    borderWidth: 2,
+    borderColor: 'black',
+    borderRadius: 5,
+    backgroundColor: 'white', // Optional: Set background color for visibility
+  },
+
+ 
 });
 
 export default HomeScreen;
