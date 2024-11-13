@@ -1,13 +1,25 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const RecCard = ({ title, location, energy, onPress }) => {
+const RecCard = ({ title, location, energy }) => {
+  const navigation = useNavigation();
+
+  const handlePress = () => {
+    navigation.navigate('Details', { title, location, energy });
+  };
+
   const imageUri = "https://www.windsystemsmag.com/wp-content/uploads/2019/10/1019-CW-I1.jpg";
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.cardContainer}>
+    <TouchableOpacity onPress={handlePress} style={styles.cardContainer}>
       <View style={styles.cardHeader}>
-        <Text style={styles.cardHeaderIcon}>🌬️ WIND</Text>
+        <Text style={styles.cardHeaderIcon}>WIND</Text>
+        <Text style={styles.cardHeaderLocation}>{location}</Text>
+      </View>
+
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>Leeroy Jenkins</Text>
         <Text style={styles.cardHeaderLocation}>{location}</Text>
       </View>
       <View style={styles.imageContainer}>
@@ -87,7 +99,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    bottom:15,
+    bottom: 15,
     paddingHorizontal: 10,
   },
   purchaseStatus: {
@@ -107,7 +119,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3b82f6',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    width:'60%',
+    width: '60%',
     borderRadius: 5,
   },
   infoButtonText: {

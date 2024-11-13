@@ -162,7 +162,7 @@ const SignupPage = () => {
   };
 
   const handleSignInPress = () => {
-    navigation.navigate('LoginMethod');
+    navigation.navigate('LoginMethodEmail');
   };
 
   const handleGoogleLogin = () => {

@@ -31,7 +31,7 @@ const Stack = createStackNavigator();
 
 const AppNavigator = () => (
   <NavigationContainer>
-    <Stack.Navigator initialRouteName="SignUp">
+    <Stack.Navigator initialRouteName="LoginMethodEmail">
       <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Details" component={DetailPage} options={{ headerShown: false }} />

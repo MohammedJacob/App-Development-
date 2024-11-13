@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { SafeAreaView, TextInput, StyleSheet, TouchableOpacity, Text, Alert, View, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import { useUser } from './UserContext'; // Import useUser hook
+import { useUser } from './UserContext'; // Adjust the path to your useUser context
 
-export default function LoginMethodEmail({ navigation }) {
+const LoginMethodEmail = () => {
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // New state for password visibility
-  const { setUserData } = useUser(); // Access setUserData function from context
+  const [showPassword, setShowPassword] = useState(false);
+  const { setUserData } = useUser();
+
+  const handleGoogleLogin = () => {
+    navigation.navigate('Onboarding');
+  };
 
   const validateEmail = (email) => {
     const re = /\S+@\S+\.\S+/;
@@ -15,6 +21,8 @@ export default function LoginMethodEmail({ navigation }) {
   };
 
   const handleContinue = async () => {
+    console.log("Continue button pressed");
+
     if (!validateEmail(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
@@ -27,111 +35,186 @@ export default function LoginMethodEmail({ navigation }) {
 
     try {
       const response = await axios.post('http://192.168.1.241:3000/loginWithEmail', { email, password });
-
-      // Log the response for debugging
       console.log('Login response:', response.data);
 
       if (response.data.error) {
         Alert.alert('Error', response.data.error);
       } else {
-        // Store user data in context
         setUserData(response.data.userData);
-        // Navigate to Home screen and pass email address
         navigation.navigate('TandC', { email });
       }
     } catch (error) {
-      // Log the error for debugging
       console.error('API request error:', error);
       Alert.alert('Error', error.response?.data?.error || 'Email or password is incorrect, please try again.');
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sign In</Text>
+
       <TextInput
         style={styles.input}
-        placeholder="Email address"
+        placeholder="Email"
+        placeholderTextColor="#aaa"
+        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
       />
+
       <View style={styles.passwordContainer}>
         <TextInput
-          style={styles.passwordInput}
+          style={styles.input}
           placeholder="Password"
+          placeholderTextColor="#aaa"
+          secureTextEntry={!showPassword}
           value={password}
           onChangeText={setPassword}
-          secureTextEntry={!showPassword} // Toggle visibility
-          autoCapitalize="none"
         />
-        <TouchableOpacity 
-          onPress={() => setShowPassword(!showPassword)} 
-          style={styles.showPasswordButton}
-        >
-          <Image
-            source={{ uri: showPassword ? 'https://img.icons8.com/material-outlined/24/000000/visible.png' : 'https://img.icons8.com/material-outlined/24/000000/invisible.png' }}
-            style={styles.icon}
-          />
+        <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+          <Text>👁️</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.button} onPress={handleContinue}>
-        <Text style={styles.buttonText}>Continue</Text>
-      </TouchableOpacity> 
-    </SafeAreaView>
+
+      <TouchableOpacity style={styles.signInButton} onPress={handleContinue}>
+        <Text style={styles.signInButtonText}>Sign In</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.orText}>or</Text>
+
+      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+        <Image
+          source={{ uri: 'https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png' }}
+          style={styles.googleIcon}
+        />
+        <Text style={styles.googleButtonText}>Sign In with Google</Text>
+      </TouchableOpacity>
+
+      <View style={styles.signupContainer}>
+        <Text style={styles.signupText}>Don't have an account? </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+          <Text style={styles.joinUsText}>Join us today</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+        <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+      </TouchableOpacity>
+      
+      <Text style={styles.footerText}>
+        By continuing to Sign In you agree to the Renuem Labs{' '}
+        <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
+          <Text style={styles.blacklink}>Terms & Conditions</Text>
+        </TouchableOpacity> and{' '}
+        <TouchableOpacity onPress={() => navigation.navigate('Privacy')}>
+          <Text style={styles.blacklink}>Risk Statement</Text>
+        </TouchableOpacity>.
+      </Text>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#fff',
+    paddingHorizontal: 20,
     justifyContent: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    textAlign: 'center',
+    marginBottom: 30,
   },
   input: {
-    height: 50,
-    borderColor: '#6ba5fb',
-    borderWidth: 2,
-    borderRadius: 11,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  passwordInput: {
-    flex: 1,
-    height: 50,
-    borderColor: '#6ba5fb',
-    borderWidth: 2,
-    borderRadius: 11,
-    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    color: '#333',
   },
   passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    position: 'relative',
+    marginBottom: 15,
   },
-  showPasswordButton: {
+  eyeIcon: {
     position: 'absolute',
-    right: 10,
+    right: 15,
     top: 10,
-    height: 30,
-    width: 30,
+  },
+  signInButton: {
+    backgroundColor: '#3d89f6',
+    borderRadius: 8,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  signInButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  orText: {
+    textAlign: 'center',
+    color: '#aaa',
+    marginVertical: 10,
+  },
+  googleButton: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  icon: {
-    width: 24,
-    height: 24,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
+    borderColor: '#ddd',
+    borderWidth: 1,
     borderRadius: 8,
-    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginBottom: 25,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  googleIcon: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  googleButtonText: {
+    color: '#333',
+    fontSize: 16,
+  },
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  signupText: {
+    color: '#000',
+    fontSize: 14,
+  },
+  joinUsText: {
+    color: '#3d89f6',
+    textDecorationLine: 'underline',
+    fontSize: 14,
+  },
+  forgotPasswordText: {
+    color: '#3d89f6',
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    marginBottom: 20,
+  },
+  footerText: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  blacklink: {
+    fontSize: 11,
   },
 });
+
+export default LoginMethodEmail;

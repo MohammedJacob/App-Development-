@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // import the icon set
-
 import {
   SafeAreaView,
-  StatusBar,
   ScrollView,
   StyleSheet,
   View,
@@ -12,40 +10,34 @@ import {
   Image,
   TouchableOpacity,
   Alert,
-  TextInput,
 } from 'react-native';
 import { Card as PaperCard, Button } from 'react-native-paper';
 import Footer from './components/footer';
-import menuicon from './assets/MenuIcon.png';
+import Header from './components/Header';
+import searchIcon from './assets/SearchIcon.png';
 import Rec from './Recs';
-import renuem from './assets/Renuem.png';
 import { useUser } from './UserContext';
-
 // Utility function to format prices
 const formatPrice = (price) => {
   const number = parseFloat(price.replace(/[^0-9.-]+/g, ''));
   if (isNaN(number)) return 'N/A';
   return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
-
 // Fetching cards from the API
 const fetchCards = async () => {
   try {
     const response = await fetch('http://192.168.1.241:3000/api/cards');
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     return await response.json();
-  } catch (error) {
-    
+  } catch (error) {  
     return [];
   }
 };
-
 // Card component
 const Card = ({ card, onPress }) => {
   const currentPrice = formatPrice(card.price);
   const targetPrice = formatPrice(card.targetPrice);
   const yieldValue = formatPrice(card.yield);
-
   const fundedPercentage = parseFloat(targetPrice.replace(/[^0-9.-]+/g, ''))
     ? Math.min(
         100,
@@ -53,34 +45,33 @@ const Card = ({ card, onPress }) => {
           100
       )
     : 0;
-
   return (
     <TouchableOpacity onPress={onPress}>
       <PaperCard style={styles.card}>
-        <View style={styles.cardHeader}>
+            <View style={styles.CatogoryHeader}>
+              <Text style={styles.cardcountry}>🤩{card.Type}</Text>
+              <Text style={styles.cardcountry}> {card.country}</Text>
+              </View>
+              <View style={styles.cardHeader}>
           <View style={styles.cardHeaderContent}>
             <View style={styles.cardHeaderText}>
               <Text style={styles.cardTitle}>{card.title}</Text>
             </View>
           </View>
         </View>
-
         <View style={styles.priceContainer}>
           <Text style={styles.cardPrice}>${currentPrice}</Text>
           <Text style={styles.cardTarget}>${targetPrice}</Text>
         </View>
-
         <View style={styles.progressBarAndImageContainer}>
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBarBackground}>
               <View style={[styles.progressBar, { width: `${fundedPercentage}%` }]} />
             </View>
           </View>
-
           <Image source={{ uri: card.image }} style={styles.image} />
         </View>
         <Text style={styles.percentageText}>{fundedPercentage.toFixed(0)}%</Text>
-
         <PaperCard.Content style={styles.cardContent}>
           <View style={styles.investmentDetailContainer}>
             <View style={styles.investmentDetail}>
@@ -89,14 +80,12 @@ const Card = ({ card, onPress }) => {
                 {card.return_value ? card.return_value.split(': ')[1] : 'N/A'}
               </Text>
             </View>
-
             <View style={styles.investmentDetail}>
               <Text style={styles.label}>Yearly investment return</Text>
               <Text style={styles.value}>
                 {card.investment ? card.investment.split(': ')[1] : 'N/A'}
               </Text>
             </View>
-
             <View style={styles.investmentDetail}>
               <Text style={styles.label}>Projected net yield</Text>
               <Text style={styles.value}>
@@ -104,7 +93,6 @@ const Card = ({ card, onPress }) => {
               </Text>
             </View>
           </View>
-
           <Button mode="contained" style={styles.detailButtonLeft} onPress={onPress}>
             Show more information
           </Button>
@@ -113,27 +101,23 @@ const Card = ({ card, onPress }) => {
     </TouchableOpacity>
   );
 };
-
 const HomeScreen = ({ navigation, route }) => {
   const { isGuest } = route.params || { isGuest: false };
   const { userData } = useUser();
-  const { selectedCountry } = useUser();
   const [activeTab, setActiveTab] = useState('Available');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTechnology, setSelectedTechnology] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('');
   const [cards, setCards] = useState([]);
   const [webSocket, setWebSocket] = useState(null);
   const [selectedValue, setSelectedValue] = React.useState("option1");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-
   useEffect(() => {
     const ws = new WebSocket('ws://192.168.1.241:3000');
-
     ws.onopen = () => {
       console.log('WebSocket connected');
       ws.send(JSON.stringify({ type: 'subscribe', userId: userData?.id }));
     };
-
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
       if (message.type === 'portfolioUpdate') {
@@ -141,45 +125,48 @@ const HomeScreen = ({ navigation, route }) => {
         setCards(message.data);
       }
     };
-
     ws.onclose = () => {
       console.log('WebSocket disconnected');
     };
-
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
-
     setWebSocket(ws);
-
     return () => {
       ws.close();
     };
   }, [userData]);
-
   useEffect(() => {
     const loadCards = async () => {
       const fetchedCards = await fetchCards();
       setCards(fetchedCards);
     };
-
     loadCards();
-
     const interval = setInterval(loadCards, 1000);
-
     return () => clearInterval(interval);
   }, []);
-
   const filterCards = (cards) => {
     const getPrice = (price) => parseFloat(price.replace(/[^0-9.-]+/g, ''));
     return cards.filter((card) => {
+      // Convert selected values and card properties to lowercase for case-insensitive comparison
+      const matchesTechnology = selectedTechnology
+        ? card.Type.toLowerCase() === selectedTechnology.toLowerCase()
+        : true;
+      const matchesCountry = selectedCountry
+        ? card.country.toLowerCase() === selectedCountry.toLowerCase()
+        : true;
       const currentPrice = getPrice(card.price);
       const targetPrice = getPrice(card.targetPrice);
       const matchesSearch = card.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return (activeTab === 'Available' ? currentPrice < targetPrice : currentPrice >= targetPrice) && matchesSearch;
+      return (
+        matchesTechnology &&
+        matchesCountry &&
+        matchesSearch &&
+        (activeTab === 'Available' ? currentPrice < targetPrice : currentPrice >= targetPrice)
+      );
     });
   };
-
+  
   const handleCardPress = (card) => {
     if (isGuest) {
       Alert.alert('Login Required', 'Log into an account to buy shares.');
@@ -187,23 +174,19 @@ const HomeScreen = ({ navigation, route }) => {
       navigation.navigate('Details', { card, userData });
     }
   };
-
   // Function to handle the search
   const handleSearch = () => {
     if (searchQuery.trim() === '') {
       Alert.alert('Empty Search', 'Please enter a search term.');
     } else {
-      console.log('Searching for:', searchQuery); // Console log the search query
-      setIsSearchVisible(true); // Hide the search bar after searching
+      setIsSearchVisible(false);  // Hide search bar after searching
     }
   };
-
   // Function to clear the search query
   const clearSearch = () => {
     setSearchQuery('');
   };
-
-  // Toggle search input visibility
+// Toggle search input visibility
   const toggleSearch = () => {
     setIsSearchVisible((prev) => !prev);
     setSearchQuery(''); // Clear search query when toggling
@@ -212,17 +195,7 @@ const HomeScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         {/* Header View */}
-        <View style={styles.header}>
-          {/* Renuem Logo */}
-          <Image source={renuem} style={styles.headerImage} />
-        
-
-         {/* Hamburger Menu Icon */}
-         <TouchableOpacity style={styles.iconContainer} onPress={() => navigation.navigate('Settings')}>
-  <Image source={menuicon} style={styles.icon} />
-</TouchableOpacity>
-          </View>
-  
+          <Header />
           <View style={styles.tabContainer}>
   <TouchableOpacity
     key="Rec"
@@ -269,48 +242,44 @@ const HomeScreen = ({ navigation, route }) => {
   
           {/* Technology Picker */}
           <Picker
-        selectedValue={selectedValue}
-        style={styles.picker}
-        onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
-      >
-            <Picker.Item label="Technology" value="" />
-            <Picker.Item label="Solar" value="solar" />
-            <Picker.Item label="Wind" value="wind" />
-          </Picker>
-  
-          {/* Country Picker */}
+  selectedValue={selectedTechnology}
+  style={styles.picker}
+  onValueChange={(itemValue) => setSelectedTechnology(itemValue)}
+>
+  <Picker.Item label="Technology" value="" />
+  <Picker.Item label="Solar" value="solar" />
+  <Picker.Item label="Wind" value="wind" />
+</Picker>
 
-          <Picker
-        selectedValue={selectedValue}
-        style={styles.picker}
-        onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
-      >
-            <Picker.Item label="Country" value="" />
-            <Picker.Item label="USA" value="usa" />
-            <Picker.Item label="Germany" value="germany" />
-          </Picker>
+<Picker
+  selectedValue={selectedCountry}
+  style={styles.picker}
+  onValueChange={(itemValue) => setSelectedCountry(itemValue)}
+>
+  <Picker.Item label="Country" value="" />
+  <Picker.Item label="USA" value="usa" />
+  <Picker.Item label="United Arab Emirates" value="United Arab Emirates" />
+</Picker>
+
           
-        
-      
-  
-      {/* Content */}
-      
-        <View>
-          <Text style={styles.headerText}>Marketplace</Text>
-        </View>
+      {/* Content */}  
+      <View style={styles.marketplaceHeader}>
+  <Text style={styles.headerText}>Marketplace</Text>
+  <TouchableOpacity onPress={toggleSearch}>
+    <Image source={searchIcon} style={styles.searchIcon} />
+  </TouchableOpacity>
+</View>
 
         <Rec/>
         {filterCards(cards).map((card) => (
           <Card key={card.id} card={card} onPress={() => handleCardPress(card)} />
         ))}
-      </ScrollView>
-  
+      </ScrollView> 
       {/* Footer */}
       <Footer />
     </SafeAreaView>
   );
 };  
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -319,13 +288,20 @@ const styles = StyleSheet.create({
     paddingEnd:15,
    
   },
-  header: {
+  marketplaceHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    position:'relative',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginTop: 20,
   },
-  
+  CatogoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginTop: 20,
+  },
   headerText: {
     fontSize: 25,
     marginTop:10,
@@ -333,15 +309,8 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#1f2545', // Darker text color for better readability
   },
-  iconContainer: {
-    flexDirection: 'row',
-  },
   iconButton: {
     marginLeft: 16,
-  },
-  icon: {
-    width: 30,
-    height: 30,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -356,7 +325,6 @@ const styles = StyleSheet.create({
   },
   tabItem: {
     flexDirection: 'row', // Aligns icon and text in a row
-    
   },
   tabText: {
     fontSize: 16,
@@ -372,8 +340,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 4,
   },
-  
-
   tabContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -381,9 +347,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    
-    
-  },
+   },
   card: {
     backgroundColor: '#fff', // White background to engulf the entire card
     borderRadius: 8,
@@ -397,20 +361,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 5,
-  },
-  cardHeaderContent: {
-    flex: 1,
+    padding: 10,
   },
   cardHeaderText: {
     marginBottom: 8,
   },
   cardTitle: {
     fontSize: 28,
-    fontWeight: 900,
+    fontWeight: "900",
     color: '#1f2545', // Darker title text color
   },
-
+  cardcountry:{
+    fontSize: 15,
+    color: '#777', 
+  },
   progressBarAndImageContainer: {
     flexDirection: 'row', // Align items horizontally
     justifyContent: 'space-between', // Space between progress bar and image
@@ -420,35 +384,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between', // Places the prices on opposite sides
     width:'75%',
-    top:30
   }, 
-
   cardPrice: {
     fontSize: 14,
     fontWeight: '900',
     color: '#34c659', // Current price color (green)
     marginLeft:'5%'
-
   },
   cardTarget: {
     fontSize: 14,
     color: '#888', // Target price color (gray)
     marginRight:'5%' // Aligns target price to the right
   },
-  
   investmentDetailContainer: {
     backgroundColor: '#eef6ff', // Light blue background color
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
   },
-
-  headerImage: {
-    width: 200,
-    height: 100, // Adjust these values based on your image dimensions
-    resizeMode: 'contain', // Ensures the image retains its aspect ratio
-  },
-
   investmentDetail: {
     flexDirection: 'row',
     justifyContent: 'space-between', 
@@ -475,10 +428,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FF0000', // Color for clear button text
   },
-  
   image: {
-    width: 90,
-    height: 90,
+    width: 70,
+    height: 70,
     borderRadius: 8,
     justifyContent:'flex-end',
   },
@@ -522,7 +474,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
   },
-
   searchContainer: {
     backgroundColor:'#fff'
   },
@@ -541,7 +492,10 @@ const styles = StyleSheet.create({
     borderWidth: 88,
     borderRadius: 5,
     padding: 10,
-    
+  },
+  searchIcon: {
+    width: 24,
+    height: 24,
   },
   picker: {
     borderWidth: 2,
@@ -549,8 +503,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: 'white', // Optional: Set background color for visibility
   },
-
- 
 });
-
 export default HomeScreen;

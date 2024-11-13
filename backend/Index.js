@@ -172,7 +172,7 @@ app.put('/api/cards/:id', async (req, res) => {
 // Endpoint to fetch card data
 app.get('/api/cards', async (req, res) => {
   try {
-    const [results] = await pool.query('SELECT id, title, price, targetPrice, image, description, megawatt Files FROM Cards');
+    const [results] = await pool.query('SELECT id, title, price, targetPrice, image, description, megawatt Files, country, Type FROM Cards');
     if (results.length === 0) {
       return res.status(404).json({ error: 'No card data found' });
     }

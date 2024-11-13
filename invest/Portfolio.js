@@ -10,10 +10,10 @@ import {
   Dimensions,
 } from 'react-native';
 import { useUser } from './UserContext';
+import Header from './components/Header';
 import Footer from './components/footer';
 import { LineChart } from 'react-native-chart-kit';
 
-// PortfolioScreen Component
 const PortfolioScreen = ({ navigation }) => {
   const { userData } = useUser();
   const [portfolio, setPortfolio] = useState([]);
@@ -36,7 +36,6 @@ const PortfolioScreen = ({ navigation }) => {
           const portfolioData = Array.isArray(data) ? data : [];
           setPortfolio(portfolioData);
 
-          // Calculate total net worth
           const totalNetWorth = portfolioData.reduce((total, item) => {
             const amount = parseFloat(item.amount_invested) || 0;
             return total + amount;
@@ -55,7 +54,6 @@ const PortfolioScreen = ({ navigation }) => {
     fetchPortfolio();
   }, [userData]);
 
-  // Helper function to generate the last 7 days' dates
   const generateLast7Days = () => {
     const result = [];
     for (let i = 6; i >= 0; i--) {
@@ -68,7 +66,6 @@ const PortfolioScreen = ({ navigation }) => {
 
   const last7Days = generateLast7Days();
 
-  // Calculate total portfolio value up to each date
   const cumulativeInvestmentData = [];
   let cumulativeTotal = 0;
 
@@ -80,40 +77,24 @@ const PortfolioScreen = ({ navigation }) => {
     cumulativeInvestmentData.push(cumulativeTotal);
   });
 
-  // Create labels for the last 7 days
   const dateLabels = last7Days.map(date => `${date.getMonth() + 1}/${date.getDate()}`);
-
-  // Handle touch and drag movement
-  const handleTouch = (event, chartWidth) => {
-    event.persist();
-    const touchX = event.nativeEvent.locationX;
-    const index = Math.floor((touchX / chartWidth) * last7Days.length);
-    const clampedIndex = Math.max(0, Math.min(index, last7Days.length - 1));
-    setSelectedIndex(clampedIndex);
-  };
-
-  const handleTouchMove = (event) => {
-    handleTouch(event, screenWidth - 32);
-  };
 
   return (
     <SafeAreaView style={styles.container}>
+      
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.contentContainer}>
+        <View>
+        <Header/>
           {loading ? (
             <Text>Loading...</Text>
           ) : userData && userData.id ? (
             <View style={styles.userContent}>
-              {/* Display Net Worth */}
-              <Text style={styles.netWorthText}>Net Worth: ${netWorth.toFixed(2)}</Text>
+              <Text style={styles.welcomeText}>Welcome back, {userData.name}!</Text>
+              <Text style={styles.netWorthText}>Cash and Holdings</Text>
+              <Text style={styles.netWorthValue}>${netWorth.toFixed(2)}</Text>
 
-              {/* Graph with touch functionality */}
-              <View
-                onTouchMove={handleTouchMove}
-                onTouchEnd={() => setSelectedIndex(null)}
-                onTouchStart={(e) => handleTouch(e, screenWidth - 32)}
-              >
+              <View style={styles.graphContainer}>
                 <LineChart
                   data={{
                     labels: dateLabels,
@@ -130,10 +111,9 @@ const PortfolioScreen = ({ navigation }) => {
                   withHorizontalLabels={false}
                   bezier
                   chartConfig={{
-                    backgroundColor: '#ffffff',
-                    backgroundGradientFrom: '#ffffff',
+                    backgroundGradientFrom: '#f9fef7',
                     backgroundGradientTo: '#ffffff',
-                    color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
+                    color: (opacity = 1) => `rgba(68,162,86,255)${opacity})`, // Green color
                     style: {
                       borderRadius: 16,
                     },
@@ -143,21 +123,10 @@ const PortfolioScreen = ({ navigation }) => {
                     borderRadius: 16,
                   }}
                 />
-                {/* Highlighted vertical line */}
-                {selectedIndex !== null && (
-                  <View style={[styles.verticalLine, { left: (selectedIndex / cumulativeInvestmentData.length) * (screenWidth - 32) }]} />
-                )}
-                {/* Display total portfolio value and date when touched */}
-                {selectedIndex !== null && (
-                  <Text style={styles.portfolioValueText}>
-                    Date: {dateLabels[selectedIndex]} - Total Portfolio Value: ${cumulativeInvestmentData[selectedIndex].toFixed(2)}
-                  </Text>
-                )}
               </View>
 
-              {/* Investment Cards sorted by newest first */}
               {portfolio
-                .sort((a, b) => new Date(b.investment_date) - new Date(a.investment_date)) // Sort by date
+                .sort((a, b) => new Date(b.investment_date) - new Date(a.investment_date))
                 .map((item) => (
                   <View key={item.id} style={styles.investmentCard}>
                     <Text style={styles.itemText}>{item.invested_stock}</Text>
@@ -186,28 +155,37 @@ const PortfolioScreen = ({ navigation }) => {
   );
 };
 
-// Styles for the component
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
     backgroundColor: '#f9f9f9',
   },
-  scrollViewContent: {
-    paddingBottom: 20,
-  },
-  contentContainer: {
-    alignItems: 'center',
-  },
+
   userContent: {
-    alignItems: 'center',
     width: '100%',
   },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 10,
+  },
   netWorthText: {
+    fontSize: 18,
+    color: '#555',
+    marginBottom: 4,
+  },
+  netWorthValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginVertical: 10,
-    color: '#28a745',
+    color: '#000',
+    marginBottom: 20,
+  },
+  graphContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   investmentCard: {
     padding: 16,
@@ -253,22 +231,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  verticalLine: {
-    position: 'absolute',
-    width: 1,
-    height: 220,
-    backgroundColor: 'rgba(0, 0, 255, 0.5)',
-  },
-  portfolioValueText: {
-    position: 'absolute',
-    top: 230,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    color: '#000',
-    fontSize: 16,
-  },
 });
 
-// Exporting the component
 export default PortfolioScreen;

@@ -7,6 +7,7 @@ import axios from 'axios';
 import SettingsImage from './assets/settings.png';
 import { useUser } from './UserContext'; // Import useUser hook
 import { useLayoutEffect } from 'react'; // Import useLayoutEffect
+import Header from './components/Header';
 
 const ProfileScreen = ({ navigation }) => {
   const { userData, setUserData } = useUser(); // Access user data and setter from context
@@ -34,7 +35,6 @@ const ProfileScreen = ({ navigation }) => {
     (async () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission required', 'Sorry, we need camera roll permissions to make this work!');
       }
     })();
   }, []);
@@ -167,6 +167,7 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <Header />
         <View style={styles.profileContainer}>
           <TouchableOpacity onPress={handleImagePick} style={styles.imageWrapper}>
             <Image
@@ -207,14 +208,6 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.infoLabel}>Email Address:</Text>
             <Text style={styles.infoValue}>{userData.email_address || 'guest@example.com'}</Text>
           </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Date Joined:</Text>
-            <Text style={styles.infoValue}>{formatDate(userData.joined_date) || 'N/A'}</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Password:</Text>
-            <Text style={styles.infoValue}>{formatDate(userData.password) || 'N/A'}</Text>
-          </View>
         </View>
 
         <View style={styles.spacer} />
@@ -228,6 +221,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+    paddingStart:15,
+    paddingEnd:15,
   },
   scrollContainer: {
     paddingBottom: 20,
