@@ -33,8 +33,8 @@ const SettingsScreen = ({ navigation }) => {
         {activeSection === 'Profile' && (
           <View style={styles.indexGroup}>
             <TouchableOpacity 
-              style={[styles.setting, activeSection === 'Security' && styles.activeSetting]}
-              onPress={() => handlePress('SecurityScreen', 'Security')}
+              style={[styles.setting, activeSection === 'Forgotpassword' && styles.activeSetting]}
+              onPress={() => handlePress('Forgotpassword', 'Forgotpassword')}
             >
               <View style={styles.settingLeft}>
                 <Icon name="shield-outline" size={20} color="#fff" />

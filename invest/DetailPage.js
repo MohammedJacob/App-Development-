@@ -18,6 +18,7 @@ import { Card as PaperCard } from 'react-native-paper';
 
 // Utility Functions
 const formatPrice = (price) => {
+  if (!price) return 'N/A';  
   const number = parseFloat(price.replace(/[^0-9.-]+/g, ''));
   return isNaN(number) ? 'N/A' : number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
@@ -41,8 +42,9 @@ const DetailPage = ({ route, navigation }) => {
   });
 
   // Derived values
-  const currentPrice = formatPrice(card.price);
-  const targetPrice = formatPrice(card.targetPrice);
+  const currentPrice = formatPrice(card.price || '0'); // Default to '0' if undefined
+const targetPrice = formatPrice(card.targetPrice || '0'); // Default to '0' if undefined
+
   const remainingAmount = parseFloat(card.targetPrice.replace(/[^0-9.-]+/g, '')) - parseFloat(card.price.replace(/[^0-9.-]+/g, ''));
   const fundedPercentage = Math.min(100, (parseFloat(card.price.replace(/[^0-9.-]+/g, '')) / parseFloat(card.targetPrice.replace(/[^0-9.-]+/g, ''))) * 100) || 0;
 

@@ -1,37 +1,47 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 
-const RecCard = ({ title, location, energy }) => {
+const RecCard = () => {
+  const [recCards, setRecCards] = useState([]);
   const navigation = useNavigation();
 
-  const handlePress = () => {
+  useEffect(() => {
+    const fetchRecsCardData = async () => {
+      try {
+        const response = await axios.get('http://192.168.1.241:3000/api/RecsCard');
+        setRecCards(response.data);
+      } catch (error) {
+        console.error('Error fetching RecsCard data:', error);
+      }
+    };
+
+    fetchRecsCardData();
+  }, []);
+
+  const handlePress = (title, location, energy) => {
     navigation.navigate('Details', { title, location, energy });
   };
 
-  const imageUri = "https://www.windsystemsmag.com/wp-content/uploads/2019/10/1019-CW-I1.jpg";
-
-  return (
-    <TouchableOpacity onPress={handlePress} style={styles.cardContainer}>
+  const renderItem = ({ item }) => (
+    <TouchableOpacity onPress={() => handlePress(item.title, item.location, item.energy_available)} style={styles.cardContainer}>
       <View style={styles.cardHeader}>
-        <Text style={styles.cardHeaderIcon}>WIND</Text>
-        <Text style={styles.cardHeaderLocation}>{location}</Text>
+        <Text style={styles.cardHeaderIcon}>{item.type.toUpperCase()}</Text>
+        <Text style={styles.cardHeaderLocation}>{item.location}</Text>
       </View>
-
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>Leeroy Jenkins</Text>
-        <Text style={styles.cardHeaderLocation}>{location}</Text>
-      </View>
+      <Text style={styles.cardTitle}>{item.title}</Text>
+      
       <View style={styles.imageContainer}>
-        <Image source={{ uri: imageUri }} style={styles.cardImage} />
+        <Image source={{ uri: item.image }} style={styles.cardImage} />
         <View style={styles.descriptionBar}>
-          <Text style={styles.cardTitle}>{title}</Text>
           <View style={styles.purchaseInfo}>
             <Text style={styles.purchaseStatus}>Available to Purchase</Text>
-            <Text style={styles.energyAvailable}>{energy} 1000 MWh</Text>
+            <Text style={styles.energyAvailable}>{item.energy_available} MWh</Text>
           </View>
         </View>
       </View>
+      
       <View style={styles.cardContent}>
         <TouchableOpacity style={styles.infoButton}>
           <Text style={styles.infoButtonText}>Show more information</Text>
@@ -39,28 +49,34 @@ const RecCard = ({ title, location, energy }) => {
       </View>
     </TouchableOpacity>
   );
+
+  return (
+    <FlatList
+      data={recCards}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.id.toString()}
+      contentContainerStyle={styles.listContainer}
+    />
+  );
 };
 
 const styles = StyleSheet.create({
   cardContainer: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
+    flex: 1,
+    paddingStart:15,
+    paddingEnd:15,
+    backgroundColor: '#fff', // White background to engulf the entire card
+    borderRadius: 8,
     marginBottom: 16,
-    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowRadius: 8,
+    elevation: 4,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 10,
     backgroundColor: '#f4f8fc',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
   },
   cardHeaderIcon: {
     fontSize: 14,
@@ -99,7 +115,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    bottom: 15,
+    paddingVertical:10,
     paddingHorizontal: 10,
   },
   purchaseStatus: {
@@ -119,7 +135,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3b82f6',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    width: '60%',
+    width: '65%',
     borderRadius: 5,
   },
   infoButtonText: {

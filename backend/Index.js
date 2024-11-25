@@ -183,60 +183,6 @@ app.get('/api/cards', async (req, res) => {
   }
 });
 
-app.get('/api/RecsCard', async (req, res) => {
-  try {
-    const [results] = await pool.query('SELECT * FROM RecsCard');
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'No card data found' });
-    }
-    res.json(results);
-  } catch (err) {
-    console.error('Error fetching cards:', err);
-    res.status(500).json({ error: 'Failed to fetch card data', details: err.message });
-  }
-});
-
-// Endpoint to update a card's price
-app.put('/api/RecsCard/:id', async (req, res) => {
-  const cardId = req.params.id;
-  const { price } = req.body;
-
-  if (price === undefined || isNaN(price) || parseFloat(price) <= 0) {
-    return res.status(400).json({ error: 'Valid price is required' });
-  }
-
-  try {
-    const [result] = await pool.query(
-      'UPDATE RecsCard SET price = ? WHERE id = ?',
-      [price, cardId]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Card not found' });
-    }
-
-    res.json({ message: 'Card price updated successfully' });
-  } catch (err) {
-    console.error('Error updating card price:', err);
-    res.status(500).json({ error: 'Failed to update card price', details: err.message });
-  }
-});
-
-// Endpoint to fetch card data
-app.get('/api/RecsCards', async (req, res) => {
-  try {
-    const [results] = await pool.query('SELECT id, title, price, targetPrice, image, description, Files FROM RecsCard');
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'No card data found' });
-    }
-    res.json(results);
-  } catch (err) {
-    console.error('Error fetching cards:', err);
-    res.status(500).json({ error: 'Failed to fetch card data', details: err.message });
-  }
-});
-
-
 // Endpoint to change a user's password
 app.put('/changePassword', async (req, res) => {
   const { user_id, currentPassword, newPassword } = req.body;
@@ -443,6 +389,21 @@ app.post('/loginWithEmail', async (req, res) => {
   } catch (err) {
     console.error('Error logging in user:', err);
     res.status(500).json({ error: 'Failed to authenticate user', details: err.message });
+  }
+});
+
+// Endpoint to fetch all RecsCard data
+app.get('/api/RecsCard', async (req, res) => {
+  try {
+    // Query to fetch all records from the RecsCard table
+    const [recsCards] = await pool.query('SELECT * FROM RecsCard');
+    if (recsCards.length === 0) {
+      return res.status(404).json({ error: 'No RecsCard data found' });
+    }
+    res.json(recsCards);
+  } catch (err) {
+    console.error('Error fetching RecsCard data:', err);
+    res.status(500).json({ error: 'Failed to fetch RecsCard data', details: err.message });
   }
 });
 

@@ -17,13 +17,16 @@ import WithdrawPage from './Withdrawpage';
 import Onboarding from './Onboarding';
 import SignUp from './SignUp';
 import TandCScreen from './T&C';
+import ForgotPassword from './Forgotpassword';
 import TandCdetails from './T&Cdetails';
 import ChangePassword from './Changepassword';
 import Welcome from './Welcome';
 import FAQ from './FAQ';
 import RecCard from './Recs';
+import Equity from './Equity';
 import Roadmap from './Roadmap';
 import OurMission from './OurMission';
+import PaymentPage from './payment';
 
 
 
@@ -31,7 +34,7 @@ const Stack = createStackNavigator();
 
 const AppNavigator = () => (
   <NavigationContainer>
-    <Stack.Navigator initialRouteName="LoginMethodEmail">
+    <Stack.Navigator initialRouteName="SignUp">
       <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
       <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Details" component={DetailPage} options={{ headerShown: false }} />
@@ -40,7 +43,7 @@ const AppNavigator = () => (
       <Stack.Screen name="LoginMethod" component={LoginMethod} options={{ headerShown: false }} />
       <Stack.Screen name="LoginMethodEmail" component={LoginMethodEmail} options={{ headerShown: false }} />
       <Stack.Screen name="About Us" component={AboutUsScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Payment" component={PaymentScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="PaymentPage" component={PaymentPage} options={{ headerShown: false }} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Wallet" component={WalletScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Privacy Policy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
@@ -55,6 +58,9 @@ const AppNavigator = () => (
       <Stack.Screen name="FAQ" component={FAQ} options={{ headerShown: false }} />
       <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
       <Stack.Screen name="Recs" component={RecCard} options={{ headerShown: false }} />
+      <Stack.Screen name="Equity" component={Equity} options={{ headerShown: false }} />
+      <Stack.Screen name="Forgotpassword" component={ForgotPassword} options={{ headerShown: false }} />
+
     </Stack.Navigator>
   </NavigationContainer>
 );

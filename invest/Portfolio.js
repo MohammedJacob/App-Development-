@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
-  StatusBar,
   ScrollView,
   StyleSheet,
   View,
@@ -10,9 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useUser } from './UserContext';
-import Header from './components/Header';
-import Footer from './components/footer';
-import { LineChart } from 'react-native-chart-kit';
+import { PieChart, BarChart } from 'react-native-chart-kit';
 
 const PortfolioScreen = ({ navigation }) => {
   const { userData } = useUser();
@@ -20,7 +17,6 @@ const PortfolioScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [netWorth, setNetWorth] = useState(0);
-  const [selectedIndex, setSelectedIndex] = useState(null);
   const screenWidth = Dimensions.get('window').width;
 
   useEffect(() => {
@@ -28,15 +24,12 @@ const PortfolioScreen = ({ navigation }) => {
       if (userData && userData.id) {
         try {
           const response = await fetch(`http://192.168.1.241:3000/api/portfolio/${userData.id}`);
-          if (!response.ok) {
-            throw new Error('Failed to fetch portfolio data');
-          }
+          if (!response.ok) throw new Error('Failed to fetch portfolio data');
           const data = await response.json();
+          setPortfolio(data);
 
-          const portfolioData = Array.isArray(data) ? data : [];
-          setPortfolio(portfolioData);
-
-          const totalNetWorth = portfolioData.reduce((total, item) => {
+          // Calculate net worth
+          const totalNetWorth = data.reduce((total, item) => {
             const amount = parseFloat(item.amount_invested) || 0;
             return total + amount;
           }, 0);
@@ -54,103 +47,108 @@ const PortfolioScreen = ({ navigation }) => {
     fetchPortfolio();
   }, [userData]);
 
-  const generateLast7Days = () => {
-    const result = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      result.push(date);
-    }
-    return result;
+  // Pie chart data
+  const pieData = [
+    { name: 'RECs', value: 0, color: '#4CAF50', legendFontColor: '#000', legendFontSize: 14 },
+    { name: 'Invest', value: netWorth, color: '#FFC107', legendFontColor: '#000', legendFontSize: 14 },
+    { name: 'Loan', value: 0, color: '#FF5722', legendFontColor: '#000', legendFontSize: 14 },
+  ];
+
+  // Bar chart data
+  const barData = {
+    labels: ['Sep', 'Oct', 'Nov', 'Dec'],
+    datasets: [
+      {
+        data: [2000, 3000, 4000, 3500],
+        color: (opacity = 1) => `rgba(68, 162, 86, ${opacity})`,
+      },
+      {
+        data: [1500, 2000, 3000, 2500],
+        color: (opacity = 1) => `rgba(255, 87, 34, ${opacity})`,
+      },
+    ],
   };
-
-  const last7Days = generateLast7Days();
-
-  const cumulativeInvestmentData = [];
-  let cumulativeTotal = 0;
-
-  last7Days.forEach(date => {
-    const investment = portfolio.find(item => new Date(item.investment_date).toDateString() === date.toDateString());
-    if (investment) {
-      cumulativeTotal += parseFloat(investment.amount_invested) || 0;
-    }
-    cumulativeInvestmentData.push(cumulativeTotal);
-  });
-
-  const dateLabels = last7Days.map(date => `${date.getMonth() + 1}/${date.getDate()}`);
 
   return (
     <SafeAreaView style={styles.container}>
-      
-      <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View>
-        <Header/>
-          {loading ? (
-            <Text>Loading...</Text>
-          ) : userData && userData.id ? (
-            <View style={styles.userContent}>
-              <Text style={styles.welcomeText}>Welcome back, {userData.name}!</Text>
-              <Text style={styles.netWorthText}>Cash and Holdings</Text>
-              <Text style={styles.netWorthValue}>${netWorth.toFixed(2)}</Text>
-
-              <View style={styles.graphContainer}>
-                <LineChart
-                  data={{
-                    labels: dateLabels,
-                    datasets: [
-                      {
-                        data: cumulativeInvestmentData,
-                      },
-                    ],
-                  }}
-                  width={screenWidth - 32}
-                  height={220}
-                  withDots={false}
-                  withInnerLines={false}
-                  withHorizontalLabels={false}
-                  bezier
-                  chartConfig={{
-                    backgroundGradientFrom: '#f9fef7',
-                    backgroundGradientTo: '#ffffff',
-                    color: (opacity = 1) => `rgba(68,162,86,255)${opacity})`, // Green color
-                    style: {
-                      borderRadius: 16,
-                    },
-                  }}
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                />
-              </View>
-
-              {portfolio
-                .sort((a, b) => new Date(b.investment_date) - new Date(a.investment_date))
-                .map((item) => (
-                  <View key={item.id} style={styles.investmentCard}>
-                    <Text style={styles.itemText}>{item.invested_stock}</Text>
-                    <Text style={styles.itemText}>${item.amount_invested}</Text>
-                  </View>
-                ))}
-            </View>
-          ) : (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorMessage}>Guest accounts cannot access this page.</Text>
-              <Text style={styles.promptMessage}>Please log in to access full features.</Text>
-              <TouchableOpacity
-                style={styles.signUpButton}
-                onPress={() => navigation.navigate('SignUp')}
-              >
-                <Text style={styles.signUpButtonText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          {error && <Text style={styles.errorMessage}>{error}</Text>}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Top Tabs */}
+        <View style={styles.tabs}>
+          {['RECs', 'Shares', 'Bonds', 'Transactions'].map((tab, index) => (
+            <TouchableOpacity key={index} style={styles.tab}>
+              <Text style={styles.tabText}>{tab}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </ScrollView>
 
-      <Footer navigation={navigation} />
+        {/* Main Content */}
+        {loading ? (
+          <Text style={styles.loadingText}>Loading...</Text>
+        ) : userData && userData.id ? (
+          <>
+            {/* Portfolio Value */}
+            <View style={styles.card}>
+              <Text style={styles.portfolioTitle}>Portfolio Value</Text>
+              <Text style={styles.portfolioValue}>${netWorth.toFixed(2)}</Text>
+              <PieChart
+                data={pieData}
+                width={screenWidth - 32}
+                height={150}
+                chartConfig={{
+                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                }}
+                accessor="value"
+                backgroundColor="transparent"
+                paddingLeft="15"
+                center={[0, 0]}
+                absolute
+              />
+            </View>
+
+            {/* Total Profit */}
+            <View style={styles.card}>
+              <Text style={styles.totalProfitTitle}>Total Profit</Text>
+              <BarChart
+                data={barData}
+                width={screenWidth - 32}
+                height={220}
+                yAxisSuffix="k"
+                chartConfig={{
+                  backgroundGradientFrom: '#f9fef7',
+                  backgroundGradientTo: '#ffffff',
+                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                  barPercentage: 0.5,
+                }}
+                style={{
+                  marginVertical: 8,
+                  borderRadius: 16,
+                }}
+              />
+            </View>
+          </>
+        ) : (
+          // Guest View
+          <View style={styles.guestContainer}>
+            <Text style={styles.errorMessage}>Guest accounts cannot access this page.</Text>
+            <Text style={styles.promptMessage}>Please log in to access full features.</Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => navigation.navigate('SignUp')}
+            >
+              <Text style={styles.buttonText}>Sign Up</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => navigation.navigate('LoginMethodEmail')}
+            >
+              <Text style={styles.buttonText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Error Handling */}
+        {error && <Text style={styles.errorText}>{error}</Text>}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -158,54 +156,55 @@ const PortfolioScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#f9f9f9',
   },
-
-  userContent: {
-    width: '100%',
+  scrollContent: {
+    padding: 16,
   },
-  welcomeText: {
-    fontSize: 24,
+  tabs: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  tab: {
+    padding: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: '#007bff',
+  },
+  tabText: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#007bff',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 20,
+    elevation: 3,
+  },
+  portfolioTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 10,
   },
-  netWorthText: {
-    fontSize: 18,
-    color: '#555',
-    marginBottom: 4,
-  },
-  netWorthValue: {
-    fontSize: 20,
+  portfolioValue: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 20,
+    color: '#4CAF50',
+    marginBottom: 10,
   },
-  graphContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 20,
+  totalProfitTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
-  investmentCard: {
-    padding: 16,
-    marginVertical: 5,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    elevation: 2,
-    width: '100%',
-  },
-  itemText: {
-    fontSize: 16,
-    color: '#555',
-  },
-  errorContainer: {
+  guestContainer: {
     alignItems: 'center',
     padding: 20,
     backgroundColor: '#fff',
     borderRadius: 8,
     elevation: 2,
-    width: '90%',
   },
   errorMessage: {
     fontSize: 20,
@@ -219,17 +218,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 10,
   },
-  signUpButton: {
+  button: {
     backgroundColor: '#007bff',
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 20,
     marginTop: 15,
   },
-  signUpButtonText: {
+  buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#555',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ff0000',
+    textAlign: 'center',
+    marginTop: 10,
   },
 });
 
