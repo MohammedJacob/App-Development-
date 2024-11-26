@@ -431,6 +431,32 @@ app.get('/api/portfolio/:userId', async (req, res) => {
   }
 });
 
+// Example route to get REC investments for a user
+app.get('/api/recs/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const [recs] = await pool.query(
+      `SELECT RecInvestments.*, Cards.title, Cards.price, Cards.targetPrice, Cards.image, 
+       Cards.return_value, Cards.investment, Cards.yield 
+       FROM RecInvestments 
+       JOIN Cards ON RecInvestments.card_id = Cards.id 
+       WHERE RecInvestments.user_id = ?`, 
+      [userId]
+    );
+
+    res.json(recs);
+
+    // Broadcast the REC investments update to WebSocket clients, if applicable
+    // Uncomment if WebSocket broadcasting is used
+    // broadcastRecInvestmentsUpdate(recs);
+  } catch (error) {
+    console.error('Error fetching REC investments:', error);
+    res.status(500).json({ error: 'Error fetching REC investments' });
+  }
+});
+
+
 // Endpoint to add an investment
 app.post('/api/investments', async (req, res) => {
   const { user_id, card_id, amount_invested, investment_date } = req.body;
