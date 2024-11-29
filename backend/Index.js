@@ -261,15 +261,29 @@ app.post('/addUser', async (req, res) => {
   }
 });
 
-// Endpoint to update a user's profile
-// Endpoint to update a user's profile
 app.put('/updateProfile', upload.single('profile_image'), async (req, res) => {
+  console.log('--- Incoming /updateProfile Request ---');
+
+  // Check if the request is received
+  if (!req) {
+    console.error('No request received.');
+    return res.status(400).json({ error: 'No request received' });
+  }
+  console.log('Request received.');
+
+  // Log request details
+  console.log('Request Headers:', req.headers);
+  console.log('Request Body:', req.body);
+  console.log('Uploaded File Details:', req.file || 'No file uploaded');
+
   const { id, username } = req.body;
-  
+
   // Check if the user ID is present
   if (!id) {
+    console.error('Error: ID is missing from the request.');
     return res.status(400).json({ error: 'ID is required' });
   }
+  console.log(`User ID: ${id}`);
 
   try {
     // Initialize query parameters
@@ -278,14 +292,26 @@ app.put('/updateProfile', upload.single('profile_image'), async (req, res) => {
 
     // If a username is provided, add it to the query
     if (username) {
+      console.log('Username provided:', username);
       query += 'username = ?, ';
       params.push(username);
+    } else {
+      console.log('No username provided, skipping username update.');
     }
 
     // Handle profile image if uploaded
     if (req.file) {
-      query += '|profile_image = ?, ';
-      params.push(req.file.path); // Path to the uploaded image
+      const imagePath = req.file.path;
+      console.log('Profile image uploaded:', imagePath);
+
+      // Log the full URL (adjust `BASE_URL` to your server URL)
+      const BASE_URL = 'http://192.168.1.241:3000'; // Replace with your actual server base URL
+      console.log('Image URL:', `${BASE_URL}/${imagePath}`);
+
+      query += 'profile_image = ?, ';
+      params.push(imagePath); // Path to the uploaded image
+    } else {
+      console.log('No profile image provided, skipping image update.');
     }
 
     // Remove trailing comma and space from the query
@@ -293,24 +319,34 @@ app.put('/updateProfile', upload.single('profile_image'), async (req, res) => {
     query += ' WHERE id = ?';
     params.push(id);
 
+    console.log('Constructed SQL Query:', query);
+    console.log('Query Parameters:', params);
+
     // Check if there's actually something to update
     if (params.length === 1) {
+      console.error('Error: No fields to update.');
       return res.status(400).json({ error: 'No fields to update' });
     }
 
     // Execute the query
+    console.log('Executing SQL Query...');
     const result = await pool.query(query, params);
 
+    console.log('SQL Query Execution Result:', result);
+
     if (result.affectedRows === 0) {
+      console.warn('No user found with the given ID.');
       return res.status(404).json({ error: 'User not found' });
     }
 
+    console.log('Profile updated successfully.');
     res.json({ message: 'Profile updated successfully' });
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ error: 'Failed to update profile', details: error.message });
   }
 });
+
 
 
 
@@ -360,6 +396,78 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Failed to authenticate user', details: err.message });
   }
 });
+
+app.put('/updateProfile', upload.single('profile_image'), async (req, res) => {
+  console.log('--- Incoming /updateProfile Request ---');
+  console.log('Request Body:', req.body);
+  console.log('Uploaded File:', req.file);
+
+  const { id, username } = req.body;
+
+  // Check if the user ID is present
+  if (!id) {
+    console.error('Error: ID is missing from the request.');
+    return res.status(400).json({ error: 'ID is required' });
+  }
+
+  console.log(`User ID: ${id}`);
+  
+  try {
+    // Initialize query parameters
+    let query = 'UPDATE User SET ';
+    let params = [];
+
+    // If a username is provided, add it to the query
+    if (username) {
+      console.log('Username provided, adding to query.');
+      query += 'username = ?, ';
+      params.push(username);
+    } else {
+      console.log('No username provided, skipping username update.');
+    }
+
+    // Handle profile image if uploaded
+    if (req.file) {
+      console.log('Profile image provided, adding to query.');
+      query += 'profile_image = ?, ';
+      params.push(req.file.path); // Path to the uploaded image
+    } else {
+      console.log('No profile image provided, skipping image update.');
+    }
+
+    // Remove trailing comma and space from the query
+    query = query.slice(0, -2);
+    query += ' WHERE id = ?';
+    params.push(id);
+
+    console.log('Constructed SQL Query:', query);
+    console.log('Query Parameters:', params);
+
+    // Check if there's actually something to update
+    if (params.length === 1) {
+      console.error('Error: No fields to update.');
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    // Execute the query
+    console.log('Executing SQL Query...');
+    const result = await pool.query(query, params);
+
+    console.log('SQL Query Execution Result:', result);
+
+    if (result.affectedRows === 0) {
+      console.warn('No user found with the given ID.');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log('Profile updated successfully.');
+    res.json({ message: 'Profile updated successfully' });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Failed to update profile', details: error.message });
+  }
+});
+
 
 // Endpoint to authenticate a user with email
 app.post('/loginWithEmail', async (req, res) => {

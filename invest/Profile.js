@@ -1,333 +1,360 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ScrollView, Image, SafeAreaView, TextInput, TouchableOpacity, Alert } from 'react-native';
-import FooterTabs from './components/footer'; // Assuming you have a FooterTabs component
+import React, { useState,useEffect } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
-import axios from 'axios';
-import SettingsImage from './assets/settings.png';
-import { useUser } from './UserContext'; // Import useUser hook
-import { useLayoutEffect } from 'react'; // Import useLayoutEffect
+import { useUser } from './UserContext';
 import Header from './components/Header';
+import FooterTabs from './components/footer';
+import axios from 'axios';
 
 const ProfileScreen = ({ navigation }) => {
   const { userData, setUserData } = useUser(); // Access user data and setter from context
 
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState(`${userData.name || ''} ${userData.last_name || ''}`);
-  const [profileImage, setProfileImage] = useState(userData.profile_image_url || '');
-
-  // Set up the settings image in the top-right corner
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity 
-          onPress={() => navigation.navigate('Settings')} 
-          style={styles.iconButton}
-        >
-          <Image source={SettingsImage} style={styles.icon} />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
+  const [profileImage, setProfileImage] = useState(userData.profile_image || '');
+  const [address, setAddress] = useState(userData.address || 'Fetching your location...');
 
   useEffect(() => {
-    // Request permission to access media library
-    (async () => {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-      }
-    })();
+    fetchUserLocation();
   }, []);
 
-  const handleEditPress = () => {
-    // Check if the user is a guest
-    if (!userData.id) { // Assuming userData.id is undefined for guests
-      Alert.alert('Login Required', 'Please log in to edit your profile.');
-      return;
+  const fetchUserLocation = async () => {
+    try {
+      // Request location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location access is required to fetch your address.');
+        setAddress('Permission denied. Enable location access.');
+        return;
+      }
+  
+      // Fetch current location with high accuracy
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+  
+      const { latitude, longitude } = location.coords;
+  
+      // Log coordinates for debugging
+      console.log('Location coordinates:', { latitude, longitude });
+  
+      // Reverse geocode to get address
+      const geocodedAddresses = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
+  
+      console.log('Reverse geocoding result:', geocodedAddresses);
+  
+      if (geocodedAddresses && geocodedAddresses.length > 0) {
+        const { street, city, region, country } = geocodedAddresses[0];
+        const formattedAddress = `${street || 'Unknown Street'}, ${city || 'Unknown City'}, ${region || 'Unknown Region'}, ${country || 'Unknown Country'}`;
+        
+        // Update state and user context
+        setAddress(formattedAddress);
+        setUserData({ ...userData, address: formattedAddress });
+      } else {
+        setAddress('Unable to resolve location to address.');
+        console.warn('No address found for the given coordinates.');
+      }
+    } catch (error) {
+      console.error('Error fetching or reverse geocoding location:', error.message);
+      setAddress('Error fetching location. Please try again.');
     }
-
-    // Toggle editing mode
-    setIsEditing(!isEditing);
   };
 
-  const handleSavePress = async () => {
-    const formData = new FormData();
-    formData.append('id', userData.id.toString()); // Convert `id` to string
-    formData.append('username', username); // Correctly append the username
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+  };
+  
+  
 
-    // Include profile image if available
-    if (profileImage) {
-      const localUri = profileImage.startsWith('file://') 
-        ? profileImage 
-        : (await FileSystem.downloadAsync(profileImage, FileSystem.cacheDirectory + 'temp.jpg')).uri;
+  
 
-      formData.append('profileImage', {
-        uri: localUri,
-        type: 'image/jpeg',
-        name: 'profile.jpg',
-      });
-    }
 
+  const handleImagePick = async () => {
     try {
-      console.log('Sending request with formData:', formDataToJson(formData)); // Correctly log formData
+      console.log('Requesting gallery permissions...');
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.granted) {
+        console.log('Gallery permission granted. Launching image picker...');
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 1,
+        });
+  
+        if (!result.canceled) {
+          console.log('Image selected:', result.assets[0]?.uri || 'No URI found');
+          setProfileImage(result.assets[0]?.uri);
+          console.log('Image ready to upload');
+          handleUploadImage(result.assets[0]?.uri);
+        } else {
+          console.log('No image selected');
+        }
+      } else {
+        console.log('Gallery permission denied.');
+        alert('Permission to access gallery is required!');
+      }
+    } catch (error) {
+      console.error('Error during image selection:', error.message);
+    }
+  };
+  
+  const handleUploadImage = async (imageUri) => {
+    console.log('Initiating image upload...');
+    if (!imageUri) {
+      console.log('Cannot upload image: No image selected');
+      return;
+    }
+  
+    console.log('Step 1: Preparing form data...');
+    const formData = new FormData();
+    formData.append('id', userData.id);
+    formData.append('profile_image', {
+      uri: imageUri,
+      type: 'image/jpeg',
+      name: 'profile.jpg',
+    });
+  
+    console.log('FormData prepared:');
+    console.log(`User ID: ${userData.id}`);
+    console.log(`Image URI: ${imageUri}`);
+    console.log('Database column: profile_image');
+  
+    try {
+      console.log('Step 2: Sending image to backend...');
       const response = await axios.put('http://192.168.1.241:3000/updateProfile', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Response from server:', response.data);
-      Alert.alert('Success', 'Profile updated successfully!');
-      // Update userData in context
-      setUserData({
-        ...userData,
-        username: username,  // Update username
-        profile_image_url: profileImage,
-      });
-    } catch (error) {
-      console.error('Error updating user data:', error.response ? error.response.data : error.message);
-      Alert.alert('Error', 'There was a problem updating your profile. Please try again.');
-    }
-    setIsEditing(false);
-  };
-
-  const handleImagePick = async () => {
-    // Check if the user is a guest
-    if (!userData.id) { // Assuming userData.id is undefined for guests
-      Alert.alert('Login Required', 'Please log in to customize your profile picture.');
-      return;
-    }
-
-    try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const pickedImageUri = result.assets[0].uri;
-        setProfileImage(pickedImageUri);
-
-        // Automatically save the profile image
-        const formData = new FormData();
-        formData.append('id', userData.id.toString()); // Convert `id` to string
-
-        const localUri = pickedImageUri.startsWith('file://') 
-          ? pickedImageUri 
-          : (await FileSystem.downloadAsync(pickedImageUri, FileSystem.cacheDirectory + 'temp.jpg')).uri;
-
-        formData.append('profileImage', {
-          uri: localUri,
-          type: 'image/jpeg',
-          name: 'profile.jpg',
-        });
-
-        try {
-          console.log('Automatically sending request with formData:', formDataToJson(formData)); // Correctly log formData
-          const response = await axios.put('http://192.168.1.241:3000/updateProfile', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-          console.log('Response from server:', response.data);
-          Alert.alert('Success', 'Profile image updated successfully!');
-          // Update userData in context
-          setUserData({
-            ...userData,
-            profile_image_url: pickedImageUri,
-          });
-        } catch (error) {
-          console.error('Error updating profile image:', error.response ? error.response.data : error.message);
-          Alert.alert('Error', 'There was a problem updating your profile image. Please try again.');
-        }
+  
+      console.log('Response received from server:', response.status, response.data);
+      if (response.data.message === 'Profile updated successfully') {
+        console.log('Step 3: Image uploaded successfully.');
+        setUserData({ ...userData, profile_image: imageUri });
+        console.log('User data updated in context.');
+        alert('Profile image updated successfully!');
+      } else {
+        console.log('Step 3: Image upload failed.');
+        alert('Failed to update profile image');
       }
     } catch (error) {
-      console.error('Error picking image:', error);
+      console.error('Error during image upload:', error.message);
+      if (error.response) {
+        console.log('Server response status:', error.response.status);
+        console.log('Server response data:', error.response.data);
+      } else {
+        console.log('No response received from server.');
+      }
+      console.log('Verify the following:');
+      console.log('- Is the server URL correct?');
+      console.log('- Is the server running and accessible?');
+      console.log('- Does the server accept multipart/form-data requests?');
+      console.log('- Are there network issues?');
+      alert('Error uploading image. Check logs for details.');
     }
   };
-
-  // Helper function to convert FormData to JSON-like format for better visibility
-  const formDataToJson = (formData) => {
-    const object = {};
-    formData._parts.forEach(([key, value]) => {
-      object[key] = value;
-    });
-    return object;
-  };
-
-  // Helper function to format the date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A'; // Return default if date is not available
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, options); // Format date to "Month Day, Year"
-  };
+  
+   
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Header />
-        <View style={styles.profileContainer}>
-          <TouchableOpacity onPress={handleImagePick} style={styles.imageWrapper}>
-            <Image
-              source={{ uri: profileImage || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png' }}
-              style={styles.profileImage}
-            />
-          </TouchableOpacity>
-          {isEditing ? (
-            <TextInput
-              style={styles.editInput}
-              value={username}
-              onChangeText={setUsername}
-              autoFocus
-            />
-          ) : (
-            <Text style={styles.username}>{username}</Text>
-          )}
-          <TouchableOpacity 
-            style={[styles.editButton, !userData.id && styles.disabledButton]} // Change button style if guest
-            onPress={handleEditPress}
-          >
-            <Text style={styles.editButtonText}>{isEditing ? 'Save' : 'Edit'}</Text>
-          </TouchableOpacity>
-          <Text style={styles.email}>{userData.email_address || 'guest@example.com'}</Text>
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="shield-checkmark" size={20} color="#bbcfdc" />
+          <Text style={styles.headerText}>Security</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="link" size={20} color="#bbcfdc" />
+          <Text style={styles.headerText}>Social connections</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="time" size={20} color="#bbcfdc" />
+          <Text style={styles.headerText}>Login History</Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.infoContainer}>
-          <Text style={styles.infoTitle}>Personal Information</Text>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>First Name:</Text>
-            <Text style={styles.infoValue}>{userData.name || 'User'}</Text>
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <Ionicons name="person-circle-outline" size={20} color="#bbcfdc" />
+            <Text style={styles.cardTitle}>Profile photo</Text>
           </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Last Name:</Text>
-            <Text style={styles.infoValue}>{userData.last_name || 'doe'}</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Email Address:</Text>
-            <Text style={styles.infoValue}>{userData.email_address || 'guest@example.com'}</Text>
+          <TouchableOpacity onPress={handleImagePick}>
+            <Ionicons name="create-outline" size={20} color="#bbcfdc" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.cardContent}>
+          <TouchableOpacity onPress={handleImagePick}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+              <Ionicons name="person-circle-outline" size={100} color="#bbb" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <Ionicons name="information-circle-outline" size={20} color="#bbcfdc" />
+            <Text style={styles.cardTitle}>Personal Information</Text>
           </View>
         </View>
+        <View style={styles.cardContent}>
+          <View style={styles.row}>
+            <Text style={styles.label}>First Name</Text>
+            <Text style={styles.value}>{userData.name || 'John'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Last Name</Text>
+            <Text style={styles.value}>{userData.last_name || 'Smith'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Email</Text>
+            <Text style={styles.value}>{userData.email_address || 'username@email.com'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Phone</Text>
+            <Text style={styles.value}>{userData.phone || '+971 4 427 33 33'}</Text>
+          </View>
+        </View>
+      </View>
 
-        <View style={styles.spacer} />
-      </ScrollView>
-      <FooterTabs /> 
-    </SafeAreaView>
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <Ionicons name="location-outline" size={20} color="#bbcfdc" />
+            <Text style={styles.cardTitle}>Address</Text>
+          </View>
+        </View>
+        <View style={styles.cardContent}>
+          <View style={styles.row}>
+          
+          
+          <Text style={styles.label}>Current Address</Text>
+          <Text style={styles.value}>{address|| 'Dubai'} </Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <Ionicons name="settings-outline" size={20} color="#bbcfdc" />
+            <Text style={styles.cardTitle}>Account Information</Text>
+          </View>
+        </View>
+        <View style={styles.cardContent}>
+          <View style={styles.row}>
+            <Text style={styles.label}>KYC</Text>
+            <Text style={styles.value}>{userData.kyc_status || 'Verified'}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Two-factor authentication</Text>
+            <Text style={styles.value}>{userData.two_factor || 'Google Authenticator'}</Text>
+          </View>
+          <View style={styles.row}>
+  <Text style={styles.label}>Registered since</Text>
+  <Text style={styles.value}>
+    {userData.joined_date ? formatDate(userData.joined_date) : 'N/A'}
+  </Text>
+</View>
+
+        </View>
+      </View>
+
+      <View style={styles.helpSection}>
+        <Text style={styles.helpText}>Need help updating information?</Text>
+        <TouchableOpacity>
+          <Text style={styles.helpLink}>Contact Us</Text>
+        </TouchableOpacity>
+      </View>
+      <FooterTabs />
+    </ScrollView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-    paddingStart:15,
-    paddingEnd:15,
+    backgroundColor: '#F8F9FA',
+    paddingStart: 15,
+    paddingEnd: 15,
   },
-  scrollContainer: {
-    paddingBottom: 20,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2B2D42',
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginBottom: 16,
   },
-  profileContainer: {
+  headerButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5,
+  },
+  headerText: {
+    color: '#fff',
+    marginLeft: 8,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 2,
   },
-  imageWrapper: {
-    width: 100,
-    height: 100,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 15,
+    marginBottom: 8,
   },
-  profileImage: {
-    width: '120%',
-    height: '120%',
-    borderRadius: 10,
-  },
-  iconContainer: {
+  cardHeaderLeft: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
-  iconButton: {
-    marginRight: 16,
-  },
-  icon: {
-    width: 24,
-    height: 24,
-  },
-  username: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  email: {
-    fontSize: 16,
-    color: '#555',
-    marginBottom: 20,
-  },
-  editButton: {
-    backgroundColor: '#007AFF', // Default button color for logged-in users
-    borderRadius: 5,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginVertical: 10,
-  },
-  disabledButton: {
-    backgroundColor: '#B0B0B0', // Grey background for guest users
-  },
-  editButtonText: {
-    color: '#FFFFFF',
+  cardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 8,
   },
-  editInput: {
-    fontSize: 22,
+  cardContent: {
+    marginTop: 8,
+  },
+  row: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  label: {
+    color: '#6A6A6A',
+  },
+  value: {
+    color: '#000',
     fontWeight: 'bold',
-    color: '#333',
-    borderBottomWidth: 1,
-    borderBottomColor: '#007AFF',
-    width: '100%',
-    marginBottom: 15,
-    textAlign: 'center',
   },
-  infoContainer: {
-    marginVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  helpSection: {
+    alignItems: 'center',
+    marginTop: 16,
   },
-  infoTitle: {
-    fontSize: 18,
+  helpText: {
+    color: '#6A6A6A',
+  },
+  helpLink: {
+    color: '#0056B3',
     fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-  },
-  infoItem: {
-    flexDirection: 'row',
-    marginBottom: 10,
-  },
-  infoLabel: {
-    fontWeight: 'bold',
-    color: '#555',
-  },
-  infoValue: {
-    marginLeft: 10,
-    color: '#333',
-  },
-  spacer: {
-    height: 60,
   },
 });
 

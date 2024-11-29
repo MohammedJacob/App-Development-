@@ -9,17 +9,23 @@ import Rec from './Recs';
 import { useUser } from './UserContext';
 import styles from './homepageStyle';
 
+// Format prices into a readable format
 const formatPrice = (price) => {
   const number = parseFloat(price.replace(/[^0-9.-]+/g, ''));
   return isNaN(number) ? 'N/A' : number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
+// Fetch cards from the backend API
 const fetchCards = async () => {
   try {
     const response = await fetch('http://192.168.1.241:3000/api/cards');
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
+    
+    const data = await response.json();
+    console.log('Fetched cards from API:', data); // Debugging log
+    return Array.isArray(data) ? data : []; // Ensure response is an array
   } catch (error) {
+    console.error('Error fetching cards:', error); // Debugging log
     return [];
   }
 };
@@ -27,7 +33,7 @@ const fetchCards = async () => {
 const HomeScreen = ({ route }) => {
   const { isGuest } = route.params || { isGuest: false };
   const { userData } = useUser();
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTechnology, setSelectedTechnology] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -42,16 +48,18 @@ const HomeScreen = ({ route }) => {
   }, []);
 
   const filteredCards = useMemo(() => {
-    return cards.filter((card) => {
+    const filtered = cards.filter((card) => {
       const matchesTechnology = selectedTechnology ? card.Type?.toLowerCase() === selectedTechnology.toLowerCase() : true;
       const matchesCountry = selectedCountry ? card.country?.toLowerCase() === selectedCountry.toLowerCase() : true;
       const matchesSearch = card.title?.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesTechnology && matchesCountry && matchesSearch;
     });
+    console.log('Filtered cards:', filtered); // Debugging log
+    return filtered;
   }, [cards, selectedTechnology, selectedCountry, searchQuery]);
 
   const renderContent = () => {
-    const filteredByType = filteredCards.filter((card) => card.Type === activeTab || activeTab === "All");
+    const filteredByType = filteredCards.filter((card) => card.Type === activeTab || activeTab === 'All');
     switch (activeTab) {
       case 'Rec':
         return <Rec cards={filteredByType} />;

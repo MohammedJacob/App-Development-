@@ -1,258 +1,157 @@
-import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Linking, Text, TouchableOpacity, Switch, View } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // You may need to install this library
+import React, { useState, useCallback } from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Modal,
+  View,
+  Pressable,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useFocusEffect } from '@react-navigation/native';
 
 const SettingsScreen = ({ navigation }) => {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [activeSection, setActiveSection] = useState('Profile'); // Default active section is 'Profile'
+  const [isModalVisible, setModalVisible] = useState(false); // Initially hidden
+  const [selectedItem, setSelectedItem] = useState(null);
 
-  const handlePress = (screenName, section) => {
-    // Toggle the active section; if clicked again, it will collapse
-    setActiveSection(prevSection => (prevSection === section ? '' : section));
-    if (screenName && section !== 'Profile') {
-      navigation.navigate(screenName);
-    }
+  const menuItems = [
+    { label: 'Marketplace', screen: 'Marketplace', icon: 'storefront-outline' },
+    { label: 'Portfolio', screen: 'Portfolio', icon: 'chart-pie' },
+    { label: 'Wallet', screen: 'Wallet', icon: 'wallet-outline' },
+    { label: 'Profile', screen: 'Profile', icon: 'account-outline' },
+    { label: 'Notifications', screen: 'Notifications', icon: 'bell-outline' },
+    { label: 'Help Center', screen: 'HelpCenter', icon: 'help-circle-outline' },
+    { label: 'Log Out', screen: 'LogOut', icon: 'logout' },
+  ];
+
+  const closeModal = () => {
+    setModalVisible(false);
+    navigation.goBack();
   };
 
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+  const handleSelection = (item, screen) => {
+    setSelectedItem(item);
+    setModalVisible(false); // Close the modal after selection
+    navigation.navigate(screen);
+  };
+
+  // Reset modal visibility when returning to the screen
+  useFocusEffect(
+    useCallback(() => {
+      setModalVisible(true); // Show modal when the screen is focused
+      return () => setModalVisible(false); // Cleanup when unfocused
+    }, [])
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollContainer}>
-        {/* Profile Group */}
-        <TouchableOpacity
-          style={[styles.header, activeSection === 'Profile' && styles.activeHeader]} 
-          onPress={() => handlePress(null, 'Profile')} // No navigation for Profile, just toggling
-        >
-          <Text style={styles.headerText}>
-            <Icon name="person-outline" size={20} /> Profile
-          </Text>
-        </TouchableOpacity>
+    <Modal
+      visible={isModalVisible}
+      transparent
+      animationType="slide"
+      onRequestClose={closeModal}
+    >
+      <SafeAreaView style={styles.container}>
+        {/* Overlay */}
+        <View style={styles.overlay} />
 
-        {/* Only show Profile group when active */}
-        {activeSection === 'Profile' && (
-          <View style={styles.indexGroup}>
-            <TouchableOpacity 
-              style={[styles.setting, activeSection === 'Forgotpassword' && styles.activeSetting]}
-              onPress={() => handlePress('Forgotpassword', 'Forgotpassword')}
-            >
-              <View style={styles.settingLeft}>
-                <Icon name="shield-outline" size={20} color="#fff" />
-                <Text style={styles.settingText}>Security</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.setting, activeSection === 'SocialConnections' && styles.activeSetting]}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                    onPress={() => handlePress('SocialConnectionsScreen', 'SocialConnections')}
-            >
-              <View style={styles.settingLeft}>
-                <Icon name="people-outline" size={20} color="#fff" />
-                <Text style={styles.settingText}>Social Connections</Text>
-              </View>
-            </TouchableOpacity>
-             {/* FAQ Subcategory */}
-             <TouchableOpacity 
-                style={[styles.setting, activeSection === 'Wallet' && styles.activeSetting]}
-                onPress={() => handlePress('Wallet', 'Wallet')}
+        {/* Modal Content */}
+        <View style={styles.modalContent}>
+          {/* Close Button */}
+          <Pressable style={styles.closeButton} onPress={closeModal}>
+            <Text style={styles.closeButtonText}>✖</Text>
+          </Pressable>
+
+          {/* Menu Items */}
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            {menuItems.map(({ label, screen, icon }) => (
+              <TouchableOpacity
+                key={label}
+                style={[
+                  styles.menuItem,
+                  selectedItem === label && styles.selectedMenuItem,
+                ]}
+                onPress={() => handleSelection(label, screen)}
               >
-                <View style={styles.settingLeft}>
-                <Icon name="wallet-outline" size={20} color="#fff" />
-                  <Text style={styles.settingText}>Wallet</Text>
-                </View>
+                <Icon
+                  name={icon}
+                  size={20}
+                  style={[
+                    styles.menuIcon,
+                    selectedItem === label && styles.selectedMenuIcon,
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.menuText,
+                    selectedItem === label && styles.selectedMenuText,
+                  ]}
+                >
+                  {label}
+                </Text>
               </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.setting, activeSection === 'LoginHistory' && styles.activeSetting]}
-              onPress={() => handlePress('LoginHistoryScreen', 'LoginHistory')}
-            >
-              <View style={styles.settingLeft}>
-                <Icon name="time-outline" size={20} color="#fff" />
-                <Text style={styles.settingText}>Login History</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.setting, activeSection === 'KYC' && styles.activeSetting]}
-              onPress={() => handlePress('KYC', 'KYC')}
-            >
-              <View style={styles.settingLeft}>
-                <Icon name="document-text-outline" size={20} color="#fff" />
-                <Text style={styles.settingText}>KYC</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.setting, activeSection === 'TandC' && styles.activeSetting]}
-              onPress={() => handlePress('TandCdetails', 'TandC')}
-            >
-              <View style={styles.settingLeft}>
-                <Icon name="document-outline" size={20} color="#fff" />
-                <Text style={styles.settingText}>Terms & Conditions</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Notifications & Help Center Group */}
-        <View>
-          <TouchableOpacity
-            style={[styles.header, activeSection === 'Notifications' && styles.activeHeader]} 
-            onPress={() => handlePress(null, 'Notifications')} // No navigation, just toggle
-          >
-            <View style={styles.settingLeft}>
-              <Icon name="notifications-outline" size={20} color="#fff" />
-              <Text style={styles.settingText}>Notifications</Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* Display Notifications subcategory when active */}
-          {activeSection === 'Notifications' && (
-            <View style={styles.indexGroup}>
-              <View style={styles.settingLeft}>
-                <Text style={styles.subCategoryText}>Enable Notifications</Text>
-              </View>
-              <Switch
-                trackColor={{ false: "#767577", true: "#81b0ff" }}
-                thumbColor={isEnabled ? "#5EFF5E" : "#f4f3f4"}
-                ios_backgroundColor="#3e3e3e"
-                onValueChange={toggleSwitch}
-                value={isEnabled}
-              />
-            </View>
-          )}
-
-          <TouchableOpacity
-            style={[styles.header, activeSection === 'HelpCenter' && styles.activeHeader]} 
-            onPress={() => handlePress(null, 'HelpCenter')} // No navigation, just toggle
-          >
-            <View style={styles.settingLeft}>
-              <Icon name="help-circle-outline" size={20} color="#fff" />
-              <Text style={styles.settingText}>Help Center</Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* Display Help Center subcategories when active */}
-          {activeSection === 'HelpCenter' && (
-            <View style={styles.indexGroup}>
-              {/* About Us Subcategory */}
-              <TouchableOpacity 
-                style={[styles.setting, activeSection === 'About Us' && styles.activeSetting]}
-                onPress={() => handlePress('About Us', 'About Us')}
-              >
-                <View style={styles.settingLeft}>
-                  <Icon name="information-circle-outline" size={20} color="#fff" />
-                  <Text style={styles.settingText}>About Us</Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* FAQ Subcategory */}
-              <TouchableOpacity 
-                style={[styles.setting, activeSection === 'FAQ' && styles.activeSetting]}
-                onPress={() => handlePress('FAQ', 'FAQ')}
-              >
-                <View style={styles.settingLeft}>
-                  <Icon name="help-buoy-outline" size={20} color="#fff" />
-                  <Text style={styles.settingText}>FAQ</Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* FAQ Subcategory */}
-              <TouchableOpacity 
-                style={[styles.setting, activeSection === 'ContactUs' && styles.activeSetting]}
-                onPress={() => Linking.openURL('mailto:contact@reneum.com')} // Open email client
-              >
-                <View style={styles.settingLeft}>
-                  <Icon name="mail-outline" size={20} color="#fff" />
-                  <Text style={styles.settingText}>Email Us</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.setting, activeSection === 'Roadmap' && styles.activeSetting]}
-                onPress={() => handlePress('Roadmap', 'Roadmap')}
-              >
-                <View style={styles.settingLeft}>
-                  <Icon name="map-outline" size={20} color="#fff" />
-                  <Text style={styles.settingText}>Roadmap</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.setting, activeSection === 'OurMission' && styles.activeSetting]}
-                onPress={() => handlePress('OurMission', 'OurMission')}
-              >
-                <View style={styles.settingLeft}>
-                  <Icon name="earth-outline" size={20} color="#fff" />
-                  <Text style={styles.settingText}>Our Misson</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.setting, activeSection === 'Home' && styles.activeSetting]}
-                onPress={() => handlePress('Home', 'Home')}
-              >
-                <View style={styles.settingLeft}>
-                  <Icon name="storefront-outline" size={20} color="#fff" />
-                  <Text style={styles.settingText}>Marketplace</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          
+            ))}
+          </ScrollView>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0f24', // Dark background color
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  header: {
-    backgroundColor: '#1e40af', // Header background color
-    padding: 15,
-    borderBottomWidth: 2,
-    borderBottomColor: '#6b21a8', // Border color
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark overlay
   },
-  activeHeader: {
-    borderBottomWidth: 3,
-    borderColor: '#f72585', // Highlight border color when active
+  modalContent: {
+    width: '95%',
+    height: '70%',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    padding: 20,
+    position: 'absolute',
+    bottom: 0,
   },
-  headerText: {
-    fontSize: 20,
-    color: '#fff',
-    fontWeight: 'bold',
+  closeButton: {
+    alignSelf: 'flex-end',
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#000',
   },
   scrollContainer: {
-    paddingHorizontal: 15,
+    flexGrow: 1,
   },
-  indexGroup: {
-    marginTop: 10, // Group elements with spacing
-    left: 40,
-  },
-  setting: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  activeSetting: {
-    backgroundColor: '#242a37', // Highlight active section background
-  },
-  settingLeft: {
+  menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginVertical: 10,
+    paddingVertical: 10,
+    borderRadius: 8,
+    paddingHorizontal: 20,
   },
-  settingText: {
+  menuText: {
     fontSize: 18,
-    color: '#fff',
+    color: '#000',
     marginLeft: 15,
   },
-  subCategoryText: {
+  menuIcon: {
+    color: '#bbcfdc', // Lime green icon
+  },
+  selectedMenuItem: {
+    backgroundColor: '#004AAD',
+  },
+  selectedMenuText: {
     color: '#fff',
-    fontSize: 16,
+  },
+  selectedMenuIcon: {
+    color: '#fff',
   },
 });
 

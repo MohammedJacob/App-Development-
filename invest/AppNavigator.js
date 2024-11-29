@@ -25,6 +25,7 @@ import FAQ from './FAQ';
 import RecCard from './Recs';
 import Equity from './Equity';
 import Roadmap from './Roadmap';
+import FooterTabs from './components/footer';
 import OurMission from './OurMission';
 import PaymentPage from './payment';
 
@@ -52,6 +53,7 @@ const AppNavigator = () => (
       <Stack.Screen name="OurMission" component={OurMission} options={{ headerShown: false }} />
       <Stack.Screen name="Withdraw" component={WithdrawPage} options={{ headerShown: false }} />
       <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
+      <Stack.Screen name="footer" component={FooterTabs} options={{ headerShown: false }} />
       <Stack.Screen name="Onboarding" component={Onboarding} options={{ headerShown: false }} />
       <Stack.Screen name="TandC" component={TandCScreen} options={{ headerShown: false }} />
       <Stack.Screen name="TandCdetails" component={TandCdetails} options={{ headerShown: false }} />

@@ -155,7 +155,6 @@ const Equity = () => {
     </SafeAreaView>
   );
 };
-
 export default Equity;
 
 const styles = StyleSheet.create({
