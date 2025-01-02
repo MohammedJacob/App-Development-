@@ -13,6 +13,7 @@ import WalletScreen from './Wallet';
 import PrivacyPolicyScreen from './Privacypolicy';
 import PortfolioScreen from './Portfolio';
 import DepositPage from './depositpage';
+import LoginHistory from './LoginHistory';
 import WithdrawPage from './Withdrawpage';
 import Onboarding from './Onboarding';
 import SignUp from './SignUp';
@@ -22,17 +23,14 @@ import TandCdetails from './T&Cdetails';
 import ChangePassword from './Changepassword';
 import Welcome from './Welcome';
 import FAQ from './FAQ';
-import RecCard from './Recs';
-import Equity from './Equity';
+import HelpCenter from './HelpCenter';
 import Roadmap from './Roadmap';
 import FooterTabs from './components/footer';
 import OurMission from './OurMission';
 import PaymentPage from './payment';
-
-
+import SocialConnection from './SocialConnection';
 
 const Stack = createStackNavigator();
-
 const AppNavigator = () => (
   <NavigationContainer>
     <Stack.Navigator initialRouteName="SignUp">
@@ -44,9 +42,11 @@ const AppNavigator = () => (
       <Stack.Screen name="LoginMethod" component={LoginMethod} options={{ headerShown: false }} />
       <Stack.Screen name="LoginMethodEmail" component={LoginMethodEmail} options={{ headerShown: false }} />
       <Stack.Screen name="About Us" component={AboutUsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="LoginHistory" component={LoginHistory} options={{ headerShown: false }} />
       <Stack.Screen name="PaymentPage" component={PaymentPage} options={{ headerShown: false }} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Wallet" component={WalletScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="HelpCenter" component={HelpCenter} options={{ headerShown: false }} />
       <Stack.Screen name="Privacy Policy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Portfolio" component={PortfolioScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Deposit" component={DepositPage} options={{ headerShown: false }} />
@@ -59,10 +59,8 @@ const AppNavigator = () => (
       <Stack.Screen name="TandCdetails" component={TandCdetails} options={{ headerShown: false }} />
       <Stack.Screen name="FAQ" component={FAQ} options={{ headerShown: false }} />
       <Stack.Screen name="ChangePassword" component={ChangePassword} options={{ headerShown: false }} />
-      <Stack.Screen name="Recs" component={RecCard} options={{ headerShown: false }} />
-      <Stack.Screen name="Equity" component={Equity} options={{ headerShown: false }} />
       <Stack.Screen name="Forgotpassword" component={ForgotPassword} options={{ headerShown: false }} />
-
+      <Stack.Screen name="SocialConnection" component={SocialConnection} options={{ headerShown: false }} />
     </Stack.Navigator>
   </NavigationContainer>
 );

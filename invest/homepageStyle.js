@@ -12,7 +12,8 @@ export default StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    marginTop: 20,
+    marginTop: 5,
+    marginBottom:5
   },
   CatogoryHeader: {
     flexDirection: 'row',

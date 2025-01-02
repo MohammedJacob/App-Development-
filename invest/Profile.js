@@ -167,18 +167,29 @@ const ProfileScreen = ({ navigation }) => {
     <ScrollView contentContainerStyle={styles.container}>
       <Header />
       <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="shield-checkmark" size={20} color="#bbcfdc" />
-          <Text style={styles.headerText}>Security</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="link" size={20} color="#bbcfdc" />
-          <Text style={styles.headerText}>Social connections</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="time" size={20} color="#bbcfdc" />
-          <Text style={styles.headerText}>Login History</Text>
-        </TouchableOpacity>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('Forgotpassword')}
+          >
+            <Ionicons name="shield-checkmark" size={20} color="#bbcfdc" />
+            <Text style={styles.headerText}>Security</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('SocialConnection')}
+          >
+            <Ionicons name="link" size={20} color="#bbcfdc" />
+            <Text style={styles.headerText}>Social connections</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('LoginHistory')}
+          >
+            <Ionicons name="time" size={20} color="#bbcfdc" />
+            <Text style={styles.headerText}>Login History</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
 
       <View style={styles.card}>
@@ -299,6 +310,8 @@ const styles = StyleSheet.create({
   headerButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 15, 
+    marginLeft:15
   },
   headerText: {
     color: '#fff',

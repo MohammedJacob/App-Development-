@@ -18,7 +18,7 @@ import { Card as PaperCard } from 'react-native-paper';
 
 // Utility Functions
 const formatPrice = (price) => {
-  if (!price) return 'N/A';  
+  if (price) return 'N/A';  
   const number = parseFloat(price.replace(/[^0-9.-]+/g, ''));
   return isNaN(number) ? 'N/A' : number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
@@ -28,9 +28,32 @@ const formatNumberWithCommas = (number) => {
   return decimal ? `${integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${decimal}` : integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
+
+
 const DetailPage = ({ route, navigation }) => {
   const { card } = route.params;
+  const { Recscard } = route.params;
   const { userData } = useUser(); // Access user data from context
+
+  const isRecCard = Recscard && Recscard.type === 'recCard';
+
+  // Utility function to handle price formatting
+  const formatPrice = (price) => {
+    if (!price || isNaN(price)) return 'N/A'; // Ensure that it's a valid price
+    const number = parseFloat(price.replace(/[^0-9.-]+/g, ''));
+    return isNaN(number) ? 'N/A' : number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  // Check and format price based on whether it's a card or Recscard
+  const currentPrice = isRecCard 
+    ? (Recscard?.price ? formatPrice(Recscard.price) : 'N/A')
+    : (card?.price ? formatPrice(card.price) : 'N/A');
+
+  const targetPrice = isRecCard 
+    ? (Recscard?.targetPrice ? formatPrice(Recscard.targetPrice) : 'N/A')
+    : (card?.targetPrice ? formatPrice(card.targetPrice) : 'N/A');
+
+
 
   // State Management
   const [cardDetails, setCardDetails] = useState({
@@ -42,12 +65,15 @@ const DetailPage = ({ route, navigation }) => {
   });
 
   // Derived values
-  const currentPrice = formatPrice(card.price || '0'); // Default to '0' if undefined
-const targetPrice = formatPrice(card.targetPrice || '0'); // Default to '0' if undefined
 
-  const remainingAmount = parseFloat(card.targetPrice.replace(/[^0-9.-]+/g, '')) - parseFloat(card.price.replace(/[^0-9.-]+/g, ''));
-  const fundedPercentage = Math.min(100, (parseFloat(card.price.replace(/[^0-9.-]+/g, '')) / parseFloat(card.targetPrice.replace(/[^0-9.-]+/g, ''))) * 100) || 0;
 
+const remainingAmount = card?.targetPrice && card?.price
+  ? parseFloat(card.targetPrice.replace(/[^0-9.-]+/g, '')) - parseFloat(card.price.replace(/[^0-9.-]+/g, ''))
+  : 0;
+
+const fundedPercentage = card?.targetPrice && card?.price
+  ? Math.min(100, (parseFloat(card.price.replace(/[^0-9.-]+/g, '')) / parseFloat(card.targetPrice.replace(/[^0-9.-]+/g, ''))) * 100)
+  : 0;
   // Handle file click - open the file URL in the browser or appropriate app
   const openFile = (fileUrl) => {
     if (fileUrl) {
@@ -66,7 +92,8 @@ const targetPrice = formatPrice(card.targetPrice || '0'); // Default to '0' if u
     }
   };
 
-  const filesLinks = card.Files ? card.Files.split(',').map(file => file.trim()) : []; // Split by comma and trim spaces
+  const filesLinks = card?.Files ? card.Files.split(',').map(file => file.trim()) : [];
+
 
   // Input handlers
   const handleInputChange = (field, value) => {
@@ -130,7 +157,16 @@ const targetPrice = formatPrice(card.targetPrice || '0'); // Default to '0' if u
         body: JSON.stringify({ price: newPrice }),
       });
 
+      const updateRecsCardResponse = await fetch(`http://192.168.1.241:3000/api/Recscard/${Reccard.id}`, {
+
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price: newPrice }),
+
+      });
+
       if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
+      if (!updateRecsCardResponse.ok) throw new Error(`HTTP error! status: ${updateRecsCardResponse.status}`);
 
       const investmentDetails = {
         user_id: userData.id,
@@ -145,22 +181,48 @@ const targetPrice = formatPrice(card.targetPrice || '0'); // Default to '0' if u
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(investmentDetails),
       });
-
+    
       if (!investmentResponse.ok) throw new Error(`HTTP error! status: ${investmentResponse.status}`);
-
+    
+      // If it's a REC investment
+      const recInvestmentDetails = {
+        user_id: userData.id,
+        recs_card_id: Recscard.id,
+        amount_invested: parseFloat(investmentAmount.replace(/,/g, '')),
+        investment_date: new Date().toISOString(),
+        invested_stock: Recscard.title,
+      };
+      
+    
+      const recInvestmentResponse = await fetch(`http://192.168.1.241:3000/api/rec-investments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(recInvestmentDetails),
+      });
+    
+      if (!recInvestmentResponse.ok) throw new Error(`HTTP error! status: ${recInvestmentResponse.status}`);
+    
+      // Success alert
       Alert.alert('Success', 'Investment saved successfully!');
       navigateToHome();
     } catch (error) {
       console.error('Error:', error);
       Alert.alert('Error', 'Failed to save the investment. Please try again later.');
     }
+    
   };
+
+  
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <Text style={styles.cardTitle}>{card.title}</Text>
+      
+      <Text style={styles.cardTitle}>
+  {card?.title || Recscard?.title || "No title available"}
+</Text>
+
 
         {/* Yield Information */}
         <View style={styles.yieldInfoContainer}>
@@ -174,34 +236,35 @@ const targetPrice = formatPrice(card.targetPrice || '0'); // Default to '0' if u
             <View style={[styles.progress, { width: `${fundedPercentage}%` }]} />
           </View>
           <Text style={styles.progressPercentage}>{`${fundedPercentage.toFixed(0)}% Funded`}</Text>
-          <Image source={{ uri: card.image }} style={styles.image} />
+          <Image source={{uri: card?.image || 'default_image_ur' }} style={styles.image} />
         </View>
 
         <PaperCard.Content style={styles.cardContent}>
-          {/* Investment details */}
-          <View style={styles.investmentDetailContainer}>
-            <View style={styles.investmentDetail}>
-              <Text style={styles.label}>5 year total return</Text>
-              <Text style={styles.value}>
-                {card.return_value ? card.return_value.split(': ')[1] : 'N/A'}
-              </Text>
-            </View>
+  {/* Investment details */}
+  <View style={styles.investmentDetailContainer}>
+    <View style={styles.investmentDetail}>
+      <Text style={styles.label}>5 year total return</Text>
+      <Text style={styles.value}>
+        {card && card.return_value ? card.return_value.split(': ') : 'N/A'}
+      </Text>
+    </View>
 
-            <View style={styles.investmentDetail}>
-              <Text style={styles.label}>Yearly investment return</Text>
-              <Text style={styles.value}>
-                {card.investment ? card.investment.split(': ')[1] : 'N/A'}
-              </Text>
-            </View>
+    <View style={styles.investmentDetail}>
+      <Text style={styles.label}>Yearly investment return</Text>
+      <Text style={styles.value}>
+        {card && card.investment ? card.investment.split(': ') : 'N/A'}
+      </Text>
+    </View>
 
-            <View style={styles.investmentDetail}>
-              <Text style={styles.label}>Projected net yield</Text>
-              <Text style={styles.value}>
-                {card.yield ? card.yield.split(': ')[1] : 'N/A'}
-              </Text>
-            </View>
-          </View>
-        </PaperCard.Content>
+    <View style={styles.investmentDetail}>
+      <Text style={styles.label}>Projected net yield</Text>
+      <Text style={styles.value}>
+        {card && card.yield ? card.yield.split(': ') : 'N/A'}
+      </Text>
+    </View>
+  </View>
+</PaperCard.Content>
+
 
         {/* Hide the card details and invest button if fully funded */}
         {fundedPercentage < 100 && (

@@ -17,13 +17,13 @@ const SettingsScreen = ({ navigation }) => {
   const [selectedItem, setSelectedItem] = useState(null);
 
   const menuItems = [
-    { label: 'Marketplace', screen: 'Marketplace', icon: 'storefront-outline' },
+    { label: 'Marketplace', screen: 'Home', icon: 'storefront-outline' },
     { label: 'Portfolio', screen: 'Portfolio', icon: 'chart-pie' },
     { label: 'Wallet', screen: 'Wallet', icon: 'wallet-outline' },
     { label: 'Profile', screen: 'Profile', icon: 'account-outline' },
     { label: 'Notifications', screen: 'Notifications', icon: 'bell-outline' },
     { label: 'Help Center', screen: 'HelpCenter', icon: 'help-circle-outline' },
-    { label: 'Log Out', screen: 'LogOut', icon: 'logout' },
+    { label: 'Log Out', screen: 'SignUp', icon: 'logout' },
   ];
 
   const closeModal = () => {

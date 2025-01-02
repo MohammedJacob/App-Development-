@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,  useRef } from 'react';
 import {
   SafeAreaView,
   TextInput,
@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   Text,
   Alert,
+  Easing,
   View,
+  Animated,
   Image,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -29,18 +31,30 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showRequirements, setShowRequirements] = useState(false);
-
+  const heightAnim = useRef(new Animated.Value(0)).current; 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [errors, setErrors] = useState({
+
+    
     name: '',
     lastName: '',
     emailAddress: '',
     password: '',
     confirmPassword: '',
   });
+
+  useEffect(() => {
+    // Animate when showRequirements changes
+    Animated.timing(heightAnim, {
+      toValue: showRequirements ? 140 : 0, // Height of the box
+      duration: 300, // Duration of animation
+      easing: Easing.out(Easing.ease), // Smooth easing
+      useNativeDriver: false, // Use native driver for non-layout properties
+    }).start();
+  }, [showRequirements]);
 
   const [expandedCard, setExpandedCard] = useState(null); // Track the expanded card
 
@@ -118,17 +132,17 @@ const SignupPage = () => {
       password: '',
       confirmPassword: '',
     };
-
+  
     if (!name.trim()) {
       newErrors.name = 'Name is required';
       valid = false;
     }
-
+  
     if (!lastName.trim()) {
       newErrors.lastName = 'Last Name is required';
       valid = false;
     }
-
+  
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailAddress.trim()) {
       newErrors.emailAddress = 'Email Address is required';
@@ -137,23 +151,28 @@ const SignupPage = () => {
       newErrors.emailAddress = 'Invalid email format';
       valid = false;
     }
-
+  
     if (!password) {
       newErrors.password = 'Password is required';
       valid = false;
+      setShowRequirements(true); // Show requirements if password is empty
     } else if (password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
       valid = false;
+      setShowRequirements(true); // Show requirements if password is invalid
+    } else {
+      setShowRequirements(false); // Hide requirements if password is valid
     }
-
+  
     if (confirmPassword !== password) {
       newErrors.confirmPassword = 'Passwords do not match';
       valid = false;
     }
-
+  
     setErrors(newErrors);
     return valid;
   };
+  
 
 
 
@@ -292,21 +311,29 @@ const SignupPage = () => {
 
             {errors.confirmPassword ? <Text>{errors.confirmPassword}</Text> : null}
 
-            {/* Conditionally render the requirements box */}
-            {showRequirements && (
-              <View style={styles.requirementsBox}>
-                <Text>Password Requirements:</Text>
+            <View>
+      
+
+      {/* Smoothly expanding requirements box */}
+      <Animated.View
+        style={{
+          height: heightAnim,
+          overflow: 'hidden',
+          backgroundColor: '#f0f0f0',
+          borderRadius: 5,
+        }}
+      >
+           <Text>Password Requirements:</Text>
                 <Text>• Must be at least 8 characters long</Text>
                 <Text>• Must contain at least 1 uppercase letter</Text>
                 <Text>• Must contain at least 1 lowercase letter</Text>
                 <Text>• Must contain at least 1 number</Text>
-                <Text>• Must contain at least 1 special character (e.g., !, @, #, $)</Text>
-              </View>
-            )}
+      </Animated.View>
+    </View>
 
-            {/* Terms and Conditions */}
+            
             <Text style={styles.linkText} onPress={() => navigation.navigate('TandCdetails')}>
-              I am <Text style={styles.signinLink}> Terms & Conditions</Text> and <Text style={styles.signinLink}>Risk Statement</Text>
+            <Text style={styles.signinLink}> Terms & Conditions</Text> and <Text style={styles.signinLink}>Risk Statement</Text>
             </Text>
 
             <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={loading}>
@@ -345,9 +372,6 @@ const SignupPage = () => {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-
-  
-  
 };
 
 const styles = StyleSheet.create({
@@ -362,19 +386,19 @@ const styles = StyleSheet.create({
   },
 
   signinButton: {
-    backgroundColor: '#090909', // Green background color
-    paddingVertical: 12,        // Padding for top and bottom
-    borderRadius: 5,            // Rounded corners
-    alignItems: 'center',       // Center text horizontally
-    justifyContent: 'center',    // Center text vertically
-    marginTop: 20,              // Space above the button
+    backgroundColor: '#090909', 
+    paddingVertical: 12,     
+    borderRadius: 5,     
+    alignItems: 'center',       
+    justifyContent: 'center',    
+    marginTop: 20,              
   },
   
   signinButtonText: {
-    color: '#FFF',              // White text color
-    fontSize: 16,               // Font size
-    textAlign: 'center',        // Center text
-  },
+    color: '#FFF',             
+    fontSize: 16,           
+    textAlign: 'center',
+   },
   
   card: {
     backgroundColor: '#FFFFFF',
@@ -490,6 +514,7 @@ const styles = StyleSheet.create({
     textAlign:'center',
     color: '#3e89f7',
     marginLeft: 5,
+    marginTop:15,
     textDecorationLine: 'underline',
   },
 

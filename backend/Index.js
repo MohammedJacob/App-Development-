@@ -556,8 +556,7 @@ app.get('/api/recs/:userId', async (req, res) => {
     res.json(recs);
 
     // Broadcast the REC investments update to WebSocket clients, if applicable
-    // Uncomment if WebSocket broadcasting is used
-    // broadcastRecInvestmentsUpdate(recs);
+   
   } catch (error) {
     console.error('Error fetching REC investments:', error);
     res.status(500).json({ error: 'Error fetching REC investments' });
@@ -593,6 +592,162 @@ app.post('/api/investments', async (req, res) => {
     res.status(500).json({ error: 'Failed to save investment', details: error.message });
   }
 });
+
+// Endpoint to reset password
+app.post('/forgotPassword', async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  if (!email || !newPassword) {
+    return res.status(400).json({ error: 'Email and new password are required' });
+  }
+
+  try {
+    const cleanedEmail = email.trim().toLowerCase();
+
+    // Check if user exists
+    const [rows] = await pool.query('SELECT * FROM User WHERE email_address = ?', [cleanedEmail]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Email not found' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the password in the database
+    await pool.query('UPDATE User SET password = ? WHERE email_address = ?', [hashedPassword, cleanedEmail]);
+
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    console.error('Error resetting password:', err);
+    res.status(500).json({ error: 'Failed to reset password', details: err.message });
+  }
+});
+
+
+// 1. Fetch social links for a specific user (filtering by user ID)
+app.get('/api/social_links/:userId', async (req, res) => {
+  const userId = req.params.userId; // Get userId from URL parameters
+  console.log(`Fetching social links for User ID: ${userId}`);
+
+  const query = 'SELECT * FROM social_links WHERE user_id = ?'; // Filter by user_id
+
+  try {
+    // Execute the query using the promise API
+    const [results] = await pool.execute(query, [userId]);
+    
+    // Log the results
+    console.log('Query results for user links:', results);
+    
+    // Check if any results exist and respond
+    if (results.length > 0) {
+      console.log(`Successfully retrieved ${results.length} link(s) for User ID ${userId}`);
+      
+      // Log the links being returned
+      console.log('Links data being sent to front-end:', results);
+      
+      res.json({ links: results });
+    } else {
+      console.log('No links found for this user');
+      res.json({ links: [] });
+    }
+  } catch (err) {
+    console.error('Database error while fetching links:', err.message);
+    return res.status(500).json({ error: 'Database error while fetching links' });
+  }
+});
+
+// 2. Save a new social link for a specific user
+app.post('/api/social_links', async (req, res) => {
+  const { user_id, link, name } = req.body; // Extract the data from the request body
+
+  if (!user_id || !link || !name) {
+    return res.status(400).json({ error: 'Please provide user_id, link, and name' });
+  }
+
+  console.log('Saving new social link:', { user_id, link, name });
+
+  const query = 'INSERT INTO social_links (user_id, link, link_name) VALUES (?, ?, ?)'; // Insert link into the database
+
+  try {
+    // Execute the query using the promise API
+    const [result] = await pool.execute(query, [user_id, link, name]);
+    
+    console.log('New link saved, ID:', result.insertId);
+
+    // Send a success response
+    res.json({ message: 'Link saved successfully', link_id: result.insertId });
+  } catch (err) {
+    console.error('Database error while saving link:', err.message);
+    return res.status(500).json({ error: 'Database error while saving link' });
+  }
+});
+
+
+
+
+app.post("/LoginHistory", (req, res) => {
+  const { user_id } = req.body;
+
+  const query = `
+    INSERT INTO LoginHistory (user_id)
+    VALUES (?);
+  `;
+
+  db.query(query, [user_id], (err, result) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "Database error" });
+      }
+      res.status(201).json({
+          message: "Login recorded",
+          login_id: result.insertId,
+      });
+  });
+});
+
+app.put("/LoginHistory/Logout", (req, res) => {
+  const { login_id } = req.body;
+
+  const query = `
+    UPDATE LoginHistory
+    SET logout_time = CURRENT_TIMESTAMP,
+        time_spent = TIMESTAMPDIFF(SECOND, login_time, CURRENT_TIMESTAMP)
+    WHERE id = ?;
+  `;
+
+  db.query(query, [login_id], (err, result) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "Database error" });
+      }
+      if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "Login record not found" });
+      }
+      res.status(200).json({ message: "Logout recorded" });
+  });
+});
+
+app.get("/LoginHistory/:user_id", (req, res) => {
+  const { user_id } = req.params;
+
+  const query = `
+    SELECT * FROM LoginHistory
+    WHERE user_id = ?
+    ORDER BY login_time DESC;
+  `;
+
+  db.query(query, [user_id], (err, results) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "Database error" });
+      }
+      res.status(200).json({ history: results });
+  });
+});
+
+
+
 
 // Upgrade HTTP server for WebSocket
 const server = app.listen(port, () => {

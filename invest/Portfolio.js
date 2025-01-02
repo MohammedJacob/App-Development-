@@ -82,6 +82,33 @@ const PortfolioScreen = ({ navigation }) => {
     return netWorth + recWorth;
   };
 
+  if (!userData || !userData.id) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.overlay}>
+          <View style={styles.box}>
+            <Text style={styles.message}>Please log in to access this page</Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => navigation.navigate('Login')}
+            >
+              <Text style={styles.buttonText}>Log In</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.signUpButton]}
+              onPress={() => navigation.navigate('SignUp')}
+            >
+              <Text style={styles.buttonText}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {/* Move FooterTabs outside the overlay */}
+        <FooterTabs />
+      </SafeAreaView>
+    );
+  }
+  
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -160,15 +187,6 @@ const PortfolioScreen = ({ navigation }) => {
                 />
               </View>
             </View>
-            <View style={styles.card}>
-              {filteredInvestments.map((item, index) => (
-                <View key={index} style={styles.investmentItem}>
-                  <Text style={styles.investmentText}>
-                    {item.name || 'Investment'}: ${item.amount_invested || '0'}
-                  </Text>
-                </View>
-              ))}
-            </View>
           </>
         )}
       </ScrollView>
@@ -179,11 +197,54 @@ const PortfolioScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
+    flex:1,
+    backgroundColor: '#F8F9FA',
+    paddingStart: 15,
+    paddingEnd: 15,
   },
-  scrollContent: {
-    padding: 16,
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  box: {
+    backgroundColor: '#fff',
+    padding: 30,
+    borderRadius: 10,
+    elevation: 5, // Adds shadow effect on Android
+    shadowColor: '#000', // iOS shadow
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 4 },
+    alignItems: 'center',
+    width: 250,
+  },
+  message: {
+    fontSize: 18,
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  signUpButton: {
+    backgroundColor: '#3f87ef',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   tabs: {
     flexDirection: 'row',
@@ -230,25 +291,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   legendContainer: {
-    flexDirection: 'column', // Stack the icon-text pairs vertically
+    flexDirection: 'column',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
     marginRight: 10,
   },
   legendRow: {
-    flexDirection: 'row', // Keep icon and text in a row
-    alignItems: 'center', // Align them vertically
-    marginBottom: 10, // Space between each row
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
   legendText: {
     fontSize: 14,
     color: '#000',
-    marginLeft: 5, // Space between the icon and text
+    marginLeft: 5,
   },
   legendValue: {
     fontSize: 14,
     color: '#000',
-    marginLeft: 5, // Space between the text and value
+    marginLeft: 5,
   },
   legendIcon: {
     marginBottom: 0,
